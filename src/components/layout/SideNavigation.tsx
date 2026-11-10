@@ -1,5 +1,5 @@
 import { Heart, MapPin } from 'lucide-react'
-import { Link, NavLink } from 'react-router'
+import { Link, NavLink, useMatch } from 'react-router'
 import { BrandIcon, Wordmark } from '@/components/ui/Brand'
 import { useFavorites } from '@/features/favorites/hooks/useFavorites'
 import { useSearchArea } from '@/hooks/useSearchArea'
@@ -22,6 +22,7 @@ export function SideNavigation() {
   const { area } = useSearchArea()
   const { favoriteIds } = useFavorites()
   const favoritesCount = favoriteIds.length
+  const isDiscover = useMatch(paths.discover) !== null
 
   return (
     <aside className="hidden w-24 shrink-0 flex-col gap-6 overflow-y-auto border-r-2 border-tostado bg-superficie px-3 py-6 md:flex lg:w-64 lg:px-5">
@@ -111,6 +112,42 @@ export function SideNavigation() {
           })}
         </ul>
       </nav>
+
+      {isDiscover && <ShortcutsHint />}
     </aside>
+  )
+}
+
+/** Atalhos de teclado do Descobrir (desktop). Implementados em useDeckShortcuts. */
+function ShortcutsHint() {
+  const key = 'font-sans font-bold text-tostado'
+
+  return (
+    <section
+      aria-labelledby="shortcuts-title"
+      className="mt-auto hidden rounded-2xl border-2 border-dashed border-pao p-3.5 text-[0.8125rem] lg:block"
+    >
+      <h2 id="shortcuts-title" className="font-sans text-sm font-bold">
+        Atalhos
+      </h2>
+      <ul className="mt-1 flex flex-col gap-1 text-texto-suave">
+        <li>
+          <kbd className={key} aria-label="Seta para a esquerda">
+            ←
+          </kbd>{' '}
+          pular ·{' '}
+          <kbd className={key} aria-label="Seta para a direita">
+            →
+          </kbd>{' '}
+          curtir
+        </li>
+        <li>
+          <kbd className={key} aria-label="Seta para cima">
+            ↑
+          </kbd>{' '}
+          detalhes · <kbd className={key}>Ctrl+Z</kbd> desfazer
+        </li>
+      </ul>
+    </section>
   )
 }

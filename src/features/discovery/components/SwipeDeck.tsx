@@ -12,8 +12,10 @@ interface SwipeDeckProps {
  * Na Etapa 5 este componente recebe os gestos de swipe (Hammer.js).
  */
 export function SwipeDeck({ current, remainingCount }: SwipeDeckProps) {
+  // Celular: ocupa a altura livre (layout aprovado).
+  // Tablet+: tamanho controlado (até 400 × 544px, como no mockup), centralizado.
   return (
-    <div className="relative mx-1 min-h-96 flex-1">
+    <div className="relative mx-1 min-h-96 flex-1 md:mx-auto md:max-h-[34rem] md:w-full md:max-w-[25rem]">
       {remainingCount > 2 && (
         <div
           aria-hidden="true"

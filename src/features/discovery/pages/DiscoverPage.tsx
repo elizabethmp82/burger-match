@@ -1,16 +1,26 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router'
 import { BrandIcon, Wordmark } from '@/components/ui/Brand'
 import { useFavorites } from '@/features/favorites/hooks/useFavorites'
 import { useNearbyPlaces } from '@/hooks/usePlaces'
 import { useSearchArea } from '@/hooks/useSearchArea'
+import { placeDetailsPath } from '@/routes/paths'
 import type { SearchRadiusKm } from '@/types/location.types'
 import { AreaPill } from '../components/AreaPill'
 import { DeckEmptyState } from '../components/DeckEmptyState'
+import { PlaceAside } from '../components/PlaceAside'
 import { SwipeActions } from '../components/SwipeActions'
 import { SwipeDeck } from '../components/SwipeDeck'
+import { useDeckShortcuts } from '../hooks/useDeckShortcuts'
 import { useDiscoveryDeck } from '../hooks/useDiscoveryDeck'
 
+/**
+ *   Celular: coluna única (layout aprovado).
+ *   Tablet:  título + contador, card com tamanho controlado, centralizado na vertical.
+ *   Desktop: coluna central + painel "Sobre este lugar" à direita (mockup Desktop · Descobrir).
+ */
 export function DiscoverPage() {
+  const navigate = useNavigate()
   const { area, setRadius } = useSearchArea()
   const places = useNearbyPlaces()
   const { favoriteIds } = useFavorites()
@@ -19,6 +29,8 @@ export function DiscoverPage() {
   const [announcement, setAnnouncement] = useState('')
 
   const current = deck.current
+  /** Posição do card atual na lista do raio ("3 de 12"). */
+  const position = places.length - deck.remaining.length + 1
 
   function handleLike() {
     if (!current) return
@@ -33,6 +45,7 @@ export function DiscoverPage() {
   }
 
   function handleUndo() {
+    if (!deck.canUndo) return
     deck.undo()
     setAnnouncement('Última ação desfeita.')
   }
@@ -42,46 +55,70 @@ export function DiscoverPage() {
     setAnnouncement(`Buscando num raio de ${radiusKm} km.`)
   }
 
-  // md:max-w-md é provisório: a composição de tablet/desktop vem na etapa 3.
+  useDeckShortcuts({
+    onSkip: handleSkip,
+    onLike: handleLike,
+    onUndo: handleUndo,
+    onDetails: () => {
+      if (current) void navigate(placeDetailsPath(current.placeId))
+    },
+  })
+
   return (
-    <div className="page-container flex min-h-full flex-col gap-4 pt-6 pb-4 md:max-w-md">
-      {/* Celular: logo no topo. Tablet+: o logo e a região ficam na barra lateral. */}
-      <header className="flex items-center gap-2 md:hidden">
-        <BrandIcon className="size-9" />
-        <Wordmark className="text-2xl" />
-      </header>
-      <h1 className="sr-only md:not-sr-only md:text-4xl md:tracking-logo">Descobrir</h1>
+    <div className="flex min-h-full lg:h-full">
+      <div className="page-container flex flex-1 flex-col gap-4 pt-6 pb-4 md:justify-center md:py-8 lg:overflow-y-auto">
+        {/* Celular: logo no topo. Tablet+: o logo e a região ficam na barra lateral. */}
+        <header className="flex items-center gap-2 md:hidden">
+          <BrandIcon className="size-9" />
+          <Wordmark className="text-2xl" />
+        </header>
 
-      <AreaPill area={area} />
+        {/* "contents" faz a linha não existir no celular (sem espaço extra). */}
+        <div className="contents md:mx-auto md:flex md:w-full md:max-w-[25rem] md:items-baseline md:justify-between">
+          <h1 className="sr-only md:not-sr-only md:text-4xl md:tracking-logo">Descobrir</h1>
+          {current && (
+            <p className="hidden text-sm text-texto-suave md:block">
+              {position} de {places.length} por perto
+            </p>
+          )}
+        </div>
 
-      {current ? (
-        <>
-          <SwipeDeck current={current} remainingCount={deck.remaining.length} />
-          <SwipeActions
-            placeName={current.name}
+        <AreaPill area={area} />
+
+        {current ? (
+          <>
+            <SwipeDeck current={current} remainingCount={deck.remaining.length} />
+            <SwipeActions
+              placeName={current.name}
+              canUndo={deck.canUndo}
+              onUndo={handleUndo}
+              onSkip={handleSkip}
+              onLike={handleLike}
+            />
+            <p className="hidden text-center text-sm text-texto-suave lg:block">
+              Use as setas do teclado: ← pular · → curtir
+            </p>
+          </>
+        ) : (
+          <DeckEmptyState
+            // A key reinicia a seleção de raio sempre que o raio atual muda.
+            key={area.radiusKm}
+            totalInRadius={places.length}
+            radiusKm={area.radiusKm}
+            favoritesCount={favoriteIds.length}
             canUndo={deck.canUndo}
             onUndo={handleUndo}
-            onSkip={handleSkip}
-            onLike={handleLike}
+            onExpandRadius={handleExpandRadius}
+            onRestart={deck.restart}
           />
-        </>
-      ) : (
-        <DeckEmptyState
-          // A key reinicia a seleção de raio sempre que o raio atual muda.
-          key={area.radiusKm}
-          totalInRadius={places.length}
-          radiusKm={area.radiusKm}
-          favoritesCount={favoriteIds.length}
-          canUndo={deck.canUndo}
-          onUndo={handleUndo}
-          onExpandRadius={handleExpandRadius}
-          onRestart={deck.restart}
-        />
-      )}
+        )}
 
-      <p role="status" className="sr-only">
-        {announcement}
-      </p>
+        <p role="status" className="sr-only">
+          {announcement}
+        </p>
+      </div>
+
+      {current && <PlaceAside place={current} origin={area.center} className="hidden lg:flex" />}
     </div>
   )
 }

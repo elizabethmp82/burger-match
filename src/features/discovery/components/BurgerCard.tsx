@@ -74,7 +74,8 @@ export function BurgerCard({ place }: { place: BurgerPlace }) {
         <h2 className="text-3xl leading-tight tracking-logo group-hover:underline">{place.name}</h2>
         <PlaceMeta place={place} showReviewCount showPrice />
         <OpenStatus place={place} variant="badge" />
-        <p className="text-texto-suave">{place.address}</p>
+        {/* No desktop o endereço vai para o painel "Sobre este lugar". */}
+        <p className="text-texto-suave lg:hidden">{place.address}</p>
         <span className="sr-only">Ver detalhes</span>
       </Link>
     </article>

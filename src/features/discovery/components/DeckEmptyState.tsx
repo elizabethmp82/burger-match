@@ -38,7 +38,10 @@ export function DeckEmptyState({
       : `Foram ${pluralize(totalInRadius, 'hamburgueria', 'hamburguerias')} num raio de ${radiusKm} km.`
 
   return (
-    <section aria-labelledby="deck-empty-title" className="flex flex-1 flex-col items-center gap-5">
+    <section
+      aria-labelledby="deck-empty-title"
+      className="flex flex-1 flex-col items-center gap-5 md:mx-auto md:w-full md:max-w-[25rem] md:flex-none"
+    >
       <EmptyDeckIllustration />
 
       <div className="text-center">
