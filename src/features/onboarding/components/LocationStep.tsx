@@ -1,34 +1,65 @@
-import { ChevronLeft, Hamburger, Navigation, Search } from 'lucide-react'
-import { useId, useState, type FormEvent } from 'react'
-import { useNavigate } from 'react-router'
+import { ChevronLeft, Hamburger, LoaderCircle, Navigation, TriangleAlert } from 'lucide-react'
+import { useRef } from 'react'
+import { useLocation, useNavigate } from 'react-router'
+import type { LocationRedirectState } from '@/components/layout/RequireLocation'
 import { buttonClasses, iconButtonClasses } from '@/components/ui/buttonStyles'
 import { MapPinShape } from '@/components/ui/MapPinShape'
+import { useGeolocation } from '@/hooks/useGeolocation'
 import { useGoBack } from '@/hooks/useGoBack'
+import { useSearchArea } from '@/hooks/useSearchArea'
 import { paths } from '@/routes/paths'
+import type { GeolocationErrorCode } from '@/services/location/geolocationService'
+import type { Region } from '@/types/location.types'
+import { cn } from '@/utils/cn'
 import { BrandIllustration } from './BrandIllustration'
+import { RegionSearch } from './RegionSearch'
+
+/** O que dizer em cada falha — sempre apontando a alternativa (RN03, RN12). */
+const ERROR_MESSAGES: Record<GeolocationErrorCode, string> = {
+  denied:
+    'Você não permitiu o acesso à localização. Tudo bem: busque seu bairro ou cidade abaixo. Se mudar de ideia, libere a permissão nas configurações do site, no navegador.',
+  unavailable:
+    'Não conseguimos descobrir sua localização agora. Tente de novo ou busque seu bairro ou cidade abaixo.',
+  timeout:
+    'A localização demorou demais para responder. Tente de novo ou busque seu bairro ou cidade abaixo.',
+  unsupported: 'Este navegador não oferece localização. Busque seu bairro ou cidade abaixo.',
+}
+
+/** Para onde ir depois da escolha: a tela que pediu a localização, ou Descobrir. */
+function useDestination(): string {
+  const { state } = useLocation()
+  const from = (state as Partial<LocationRedirectState> | null)?.from
+  return typeof from === 'string' && from.startsWith('/') ? from : paths.discover
+}
 
 /**
- * "Onde você está?" — Etapa 2: apenas a interface.
- * Os dois caminhos levam a Descobrir com a região simulada (Pinheiros).
- * Na Etapa 3: o botão pedirá a permissão do navegador (RN02) e a busca
- * definirá a região manualmente (RN03).
+ * "Onde você está?" — RN02 (permissão só após o clique) e RN03 (busca manual).
+ * A localização fica só na memória da aba: não é salva nem compartilhada.
  */
 export function LocationStep() {
   const navigate = useNavigate()
   const goBack = useGoBack(paths.welcome)
-  const searchInputId = useId()
-  const searchHintId = useId()
-  const [query, setQuery] = useState('')
+  const destination = useDestination()
+  const { setLocation } = useSearchArea()
+  const geolocation = useGeolocation()
+  const searchInputRef = useRef<HTMLInputElement>(null)
+  const locating = geolocation.status === 'locating'
 
-  function goToDiscover() {
-    void navigate(paths.discover)
+  async function handleUseMyLocation() {
+    if (locating) return
+    const coordinates = await geolocation.request()
+    if (coordinates) {
+      setLocation('Sua localização', coordinates, 'gps')
+      void navigate(destination)
+    } else {
+      // A mensagem de erro é anunciada (role="alert"); o foco vai para a alternativa.
+      searchInputRef.current?.focus()
+    }
   }
 
-  function handleSearch(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    if (query.trim()) {
-      goToDiscover()
-    }
+  function handleSelectRegion(region: Region) {
+    setLocation(region.name, region.center, 'manual')
+    void navigate(destination)
   }
 
   return (
@@ -61,12 +92,30 @@ export function LocationStep() {
 
           <button
             type="button"
-            onClick={goToDiscover}
-            className={buttonClasses('primary', 'mt-8 w-full')}
+            onClick={() => void handleUseMyLocation()}
+            aria-disabled={locating}
+            className={buttonClasses('primary', cn('mt-8 w-full', locating && 'cursor-progress'))}
           >
-            <Navigation aria-hidden="true" className="size-5" strokeWidth={2.5} />
-            Usar minha localização
+            {locating ? (
+              <LoaderCircle aria-hidden="true" className="size-5 animate-spin" strokeWidth={2.5} />
+            ) : (
+              <Navigation aria-hidden="true" className="size-5" strokeWidth={2.5} />
+            )}
+            {locating ? 'Localizando…' : 'Usar minha localização'}
           </button>
+
+          {/* role="alert": o leitor de tela lê a mensagem assim que ela aparece. */}
+          <div role="alert">
+            {geolocation.status === 'error' && geolocation.errorCode ? (
+              <LocationNotice tone="error">{ERROR_MESSAGES[geolocation.errorCode]}</LocationNotice>
+            ) : null}
+          </div>
+          {geolocation.blocked && geolocation.status !== 'error' && (
+            <LocationNotice tone="info">
+              A localização está bloqueada neste navegador. Busque seu bairro ou cidade abaixo, ou
+              libere a permissão nas configurações do site.
+            </LocationNotice>
+          )}
 
           <div className="my-6 flex items-center gap-4 text-sm text-texto-suave" aria-hidden="true">
             <span className="h-0.5 flex-1 bg-pao/30" />
@@ -74,28 +123,7 @@ export function LocationStep() {
             <span className="h-0.5 flex-1 bg-pao/30" />
           </div>
 
-          <form role="search" onSubmit={handleSearch} className="flex flex-col gap-2">
-            <label htmlFor={searchInputId} className="text-sm font-bold">
-              Buscar por cidade ou bairro
-            </label>
-            <div className="flex items-center gap-3 rounded-2xl border-2 border-tostado bg-superficie px-4 focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-ketchup">
-              <Search aria-hidden="true" className="size-5 shrink-0 text-texto-suave" />
-              <input
-                id={searchInputId}
-                type="search"
-                enterKeyHint="search"
-                autoComplete="address-level2"
-                placeholder="Ex.: Pinheiros, São Paulo"
-                aria-describedby={searchHintId}
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                className="min-w-0 flex-1 bg-transparent py-3.5 text-lg outline-none placeholder:text-texto-suave/70"
-              />
-            </div>
-            <p id={searchHintId} className="text-sm text-texto-suave">
-              Se você negar a permissão no navegador, é só buscar aqui.
-            </p>
-          </form>
+          <RegionSearch onSelect={handleSelectRegion} inputRef={searchInputRef} />
         </div>
       </div>
     </main>
@@ -112,5 +140,28 @@ function BurgerPin() {
         strokeWidth={2.25}
       />
     </div>
+  )
+}
+
+function LocationNotice({ tone, children }: { tone: 'error' | 'info'; children: string }) {
+  return (
+    <p
+      className={cn(
+        'mt-4 flex items-start gap-3 rounded-2xl border-2 p-4 text-sm',
+        tone === 'error'
+          ? 'border-ketchup-forte bg-ketchup/8 text-tostado'
+          : 'border-tostado/20 bg-superficie text-texto-suave',
+      )}
+    >
+      <TriangleAlert
+        aria-hidden="true"
+        className={cn(
+          'mt-0.5 size-5 shrink-0',
+          tone === 'error' ? 'text-ketchup-forte' : 'text-pao',
+        )}
+        strokeWidth={2.25}
+      />
+      {children}
+    </p>
   )
 }

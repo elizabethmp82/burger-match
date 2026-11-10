@@ -1,8 +1,21 @@
 import { createContext, useContext } from 'react'
-import type { SearchArea, SearchRadiusKm } from '@/types/location.types'
+import type {
+  Coordinates,
+  LocationSource,
+  SearchArea,
+  SearchRadiusKm,
+} from '@/types/location.types'
 
 export interface SearchAreaContextValue {
   area: SearchArea
+  /** true depois que o usuário escolheu uma região (GPS ou busca manual). */
+  hasChosenLocation: boolean
+  /** Define o centro da busca, mantendo o raio atual. */
+  setLocation: (
+    label: string,
+    center: Coordinates,
+    source: Exclude<LocationSource, 'default'>,
+  ) => void
   setRadius: (radiusKm: SearchRadiusKm) => void
 }
 

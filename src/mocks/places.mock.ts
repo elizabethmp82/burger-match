@@ -1,17 +1,30 @@
 /**
- * DADOS SIMULADOS — usados apenas na Etapa 2.
- * Na Etapa 4 serão substituídos pela Places API (New).
+ * DADOS SIMULADOS — usados até a Etapa 4, quando a Places API (New) os substitui.
  * Nomes, endereços e telefones são fictícios.
+ *
+ * Cada local guarda sua DISTÂNCIA e DIREÇÃO em relação ao centro da busca (offset),
+ * não coordenadas fixas. Assim, onde quer que o usuário esteja (GPS ou bairro
+ * buscado), as mesmas 16 hamburguerias aparecem em volta dele — e o app pode ser
+ * testado em qualquer cidade antes da integração com o Google.
  */
 import type { SearchArea } from '@/types/location.types'
 import type { BurgerPlace, PlacePhoto } from '@/types/place.types'
-import { offsetCoordinates } from '@/utils/distance'
 
-/** Região inicial simulada (na Etapa 3 virá da geolocalização ou da busca manual). */
+/**
+ * Região de exemplo antes de o usuário escolher a dele (source: 'default').
+ * Descobrir e Mapa pedem a escolha; Favoritos e Detalhes funcionam com ela.
+ */
 export const MOCK_SEARCH_AREA: SearchArea = {
   label: 'Pinheiros',
   center: { latitude: -23.5667, longitude: -46.6929 },
   radiusKm: 5,
+  source: 'default',
+}
+
+/** Local simulado: tudo de BurgerPlace, exceto `location`, que é calculada a partir do offset. */
+export interface MockPlaceSeed extends Omit<BurgerPlace, 'location' | 'distanceMeters'> {
+  /** A `km` do centro da busca, na direção `bearing` (graus a partir do norte, sentido horário). */
+  offset: { km: number; bearing: number }
 }
 
 /** IDs que já começam favoritados, para a tela de Favoritos ter conteúdo desde o início. */
@@ -31,17 +44,12 @@ function mockPhotos(placeSlug: string, count: number): PlacePhoto[] {
   }))
 }
 
-/** Posiciona o local a `km` do centro simulado, na direção `bearing` (graus a partir do norte). */
-function at(km: number, bearing: number) {
-  return offsetCoordinates(MOCK_SEARCH_AREA.center, km, bearing)
-}
-
-export const MOCK_PLACES: readonly BurgerPlace[] = [
+export const MOCK_PLACE_SEEDS: readonly MockPlaceSeed[] = [
   {
     placeId: 'mock-pao-e-brasa',
     name: 'Pão & Brasa',
     address: 'Rua dos Pinheiros, 1.045 · Pinheiros',
-    location: at(0.6, 40),
+    offset: { km: 0.6, bearing: 40 },
     rating: 4.4,
     reviewCount: 512,
     openNow: true,
@@ -56,7 +64,7 @@ export const MOCK_PLACES: readonly BurgerPlace[] = [
     placeId: 'mock-chapa-quente',
     name: 'Chapa Quente',
     address: 'Rua Cardeal Arcoverde, 780 · Pinheiros',
-    location: at(0.9, 200),
+    offset: { km: 0.9, bearing: 200 },
     rating: 4.2,
     reviewCount: 236,
     openNow: false,
@@ -70,7 +78,7 @@ export const MOCK_PLACES: readonly BurgerPlace[] = [
     placeId: 'mock-burgeria-do-chefe',
     name: 'Burgeria do Chefe',
     address: 'Rua das Palmeiras, 320 · Centro',
-    location: at(1.2, 120),
+    offset: { km: 1.2, bearing: 120 },
     rating: 4.8,
     reviewCount: 1234,
     openNow: true,
@@ -85,7 +93,7 @@ export const MOCK_PLACES: readonly BurgerPlace[] = [
     placeId: 'mock-mostarda-burger-bar',
     name: 'Mostarda Burger Bar',
     address: 'Rua Fradique Coutinho, 455 · Pinheiros',
-    location: at(1.6, 330),
+    offset: { km: 1.6, bearing: 330 },
     rating: 4.5,
     reviewCount: 689,
     // Sem informação de horário: a interface não mostra status (RN11).
@@ -97,7 +105,7 @@ export const MOCK_PLACES: readonly BurgerPlace[] = [
     placeId: 'mock-fumaca-smokehouse',
     name: 'Fumaça Smokehouse',
     address: 'Avenida Pedroso de Morais, 1.210 · Alto de Pinheiros',
-    location: at(1.9, 280),
+    offset: { km: 1.9, bearing: 280 },
     rating: 4.6,
     reviewCount: 942,
     openNow: true,
@@ -112,7 +120,7 @@ export const MOCK_PLACES: readonly BurgerPlace[] = [
     placeId: 'mock-brooklyn-burgers',
     name: 'Brooklyn Burgers',
     address: 'Rua Harmonia, 120 · Vila Madalena',
-    location: at(2.3, 10),
+    offset: { km: 2.3, bearing: 10 },
     rating: 4.7,
     reviewCount: 879,
     openNow: true,
@@ -127,7 +135,7 @@ export const MOCK_PLACES: readonly BurgerPlace[] = [
     placeId: 'mock-big-bacon-club',
     name: 'Big Bacon Club',
     address: 'Rua Teodoro Sampaio, 2.300 · Pinheiros',
-    location: at(2.7, 160),
+    offset: { km: 2.7, bearing: 160 },
     rating: 4.1,
     reviewCount: 158,
     openNow: false,
@@ -140,7 +148,7 @@ export const MOCK_PLACES: readonly BurgerPlace[] = [
     placeId: 'mock-hamburgueria-011',
     name: 'Hamburgueria 011',
     address: 'Rua Mourato Coelho, 900 · Vila Madalena',
-    location: at(3.1, 60),
+    offset: { km: 3.1, bearing: 60 },
     rating: 4.6,
     reviewCount: 1021,
     openNow: false,
@@ -155,7 +163,7 @@ export const MOCK_PLACES: readonly BurgerPlace[] = [
     placeId: 'mock-cheddar-e-cia',
     name: 'Cheddar & Cia',
     address: 'Avenida Rebouças, 3.050 · Jardim Paulista',
-    location: at(3.4, 110),
+    offset: { km: 3.4, bearing: 110 },
     rating: 4.3,
     reviewCount: 301,
     openNow: true,
@@ -169,7 +177,7 @@ export const MOCK_PLACES: readonly BurgerPlace[] = [
     placeId: 'mock-vila-grill',
     name: 'Vila Grill Burger',
     address: 'Rua Aspicuelta, 610 · Vila Madalena',
-    location: at(3.8, 20),
+    offset: { km: 3.8, bearing: 20 },
     rating: 4.4,
     reviewCount: 427,
     openNow: true,
@@ -183,7 +191,7 @@ export const MOCK_PLACES: readonly BurgerPlace[] = [
     placeId: 'mock-smash-da-vila',
     name: 'Smash da Vila',
     address: 'Rua Girassol, 75 · Vila Madalena',
-    location: at(4.0, 350),
+    offset: { km: 4.0, bearing: 350 },
     rating: 4.5,
     reviewCount: 388,
     openNow: true,
@@ -197,7 +205,7 @@ export const MOCK_PLACES: readonly BurgerPlace[] = [
     placeId: 'mock-garagem-burger',
     name: 'Garagem Burger',
     address: 'Rua Butantã, 480 · Butantã',
-    location: at(4.6, 235),
+    offset: { km: 4.6, bearing: 235 },
     rating: 3.9,
     reviewCount: 97,
     openNow: false,
@@ -211,7 +219,7 @@ export const MOCK_PLACES: readonly BurgerPlace[] = [
     placeId: 'mock-burger-do-porto',
     name: 'Burger do Porto',
     address: 'Rua Augusta, 2.100 · Cerqueira César',
-    location: at(6.5, 95),
+    offset: { km: 6.5, bearing: 95 },
     rating: 4.6,
     reviewCount: 1530,
     openNow: true,
@@ -226,7 +234,7 @@ export const MOCK_PLACES: readonly BurgerPlace[] = [
     placeId: 'mock-casa-do-smash',
     name: 'Casa do Smash',
     address: 'Avenida Santo Amaro, 4.200 · Brooklin',
-    location: at(8.2, 165),
+    offset: { km: 8.2, bearing: 165 },
     rating: 4.3,
     reviewCount: 640,
     openNow: true,
@@ -239,7 +247,7 @@ export const MOCK_PLACES: readonly BurgerPlace[] = [
     placeId: 'mock-brasa-norte',
     name: 'Brasa Norte',
     address: 'Avenida Braz Leme, 1.800 · Santana',
-    location: at(12.4, 15),
+    offset: { km: 12.4, bearing: 15 },
     rating: 4.7,
     reviewCount: 812,
     openNow: false,
@@ -253,7 +261,7 @@ export const MOCK_PLACES: readonly BurgerPlace[] = [
     placeId: 'mock-hamburgueria-central',
     name: 'Hamburgueria Central',
     address: 'Rua Tuiuti, 950 · Tatuapé',
-    location: at(17.5, 75),
+    offset: { km: 17.5, bearing: 75 },
     rating: 4.0,
     reviewCount: 205,
     priceLevel: 2,

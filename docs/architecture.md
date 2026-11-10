@@ -35,8 +35,10 @@ src/
 │   ├── map/                      MapPage, MockMap, PlaceMarker, utils/projectToBox
 │   └── place-details/            PlaceDetailsPage, PhotoGallery
 ├── hooks/                        useSearchArea, usePlaces (useNearbyPlaces/usePlace/usePlacesByIds), useGoBack
-├── mocks/places.mock.ts          16 hamburguerias fictícias (12 dentro de 5 km)
+├── mocks/places.mock.ts          16 hamburguerias fictícias, posicionadas em volta do centro (12 dentro de 5 km)
+├── mocks/regions.mock.ts         Bairros e cidades para a busca manual (até a Etapa 4)
 ├── services/places/              placesService (lê o mock; Places API na Etapa 4)
+├── services/location/            geolocationService (GPS) e regionSearchService (busca manual)
 ├── types/                        place.types, location.types
 ├── utils/                        distance (Haversine), formatters (pt-BR), googleMaps, cn
 ├── routes/                       AppRoutes e paths
@@ -122,6 +124,15 @@ Breakpoints padrão do Tailwind: celular `< md` (768px), tablet `md`, desktop `l
 - **Detalhes dentro do `AppLayout`:** ganha a barra lateral no tablet/desktop; no celular o layout esconde a navegação inferior nessa rota. A partir de 768px a página usa o `PlaceDetailsPanel` (o mesmo do Favoritos) + galeria completa com crédito por foto.
 - **Mapa:** no desktop, lista "Por perto" (filtros Todas / Abertas agora / Favoritas) + mapa com balão no marcador selecionado; selecionar na lista ou no mapa sincroniza os dois (RN10). O enquadramento usa todos os locais da região, para os marcadores não mudarem de lugar ao filtrar. Busca, zoom e "minha localização" do mockup entram nas Etapas 3/4, quando funcionarem.
 - **`<main>` é `relative`:** elementos `absolute` (como os avisos `sr-only`) ficam dentro da área que rola, sem criar rolagem na página inteira.
+
+### ADR-013 — Localização (Etapa 3)
+
+- **Fluxo:** a região começa como exemplo (`source: 'default'`). Descobrir e Mapa ficam atrás de `RequireLocation`, que leva a "Onde você está?" e depois devolve o usuário à tela pedida (`state.from`). Favoritos e Detalhes funcionam sem escolha.
+- **GPS (RN02):** `navigator.geolocation` só é chamado no clique, com `enableHighAccuracy: false` (precisão de bairro basta), `timeout` de 10 s e `maximumAge` de 5 min. Erros tipados (`denied`, `unavailable`, `timeout`, `unsupported`) viram mensagens que sempre apontam a busca manual (RN03/RN12). A Permissions API avisa de antemão quando a localização está bloqueada.
+- **Privacidade:** a localização fica só em memória (contexto React) — não é salva nem enviada, como a tela promete.
+- **Busca manual:** combobox acessível (padrão WAI-ARIA) sobre uma lista local de bairros e cidades, sem acentos/maiúsculas na comparação. Na Etapa 4 o serviço passa a usar o Autocomplete da Places API, sem mudar a interface.
+- **Mocks relativos ao centro:** os locais simulados guardam distância e direção (`offset`), não coordenadas. Assim o app funciona em qualquer cidade até a integração com o Google.
+- **Sessão do baralho por região:** trocar de região recomeça o baralho; mudar só o raio, não. Favoritos não são afetados.
 
 ## Pontos de atenção conhecidos
 

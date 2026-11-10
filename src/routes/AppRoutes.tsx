@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate } from 'react-router'
 import { AppLayout } from '@/components/layout/AppLayout'
+import { RequireLocation } from '@/components/layout/RequireLocation'
 import { DiscoverPage } from '@/features/discovery/pages/DiscoverPage'
 import { FavoritesPage } from '@/features/favorites/pages/FavoritesPage'
 import { MapPage } from '@/features/map/pages/MapPage'
@@ -17,9 +18,23 @@ export const router = createBrowserRouter([
   {
     element: <AppLayout />,
     children: [
-      { path: paths.discover, element: <DiscoverPage /> },
+      {
+        path: paths.discover,
+        element: (
+          <RequireLocation>
+            <DiscoverPage />
+          </RequireLocation>
+        ),
+      },
       { path: paths.favorites, element: <FavoritesPage /> },
-      { path: paths.map, element: <MapPage /> },
+      {
+        path: paths.map,
+        element: (
+          <RequireLocation>
+            <MapPage />
+          </RequireLocation>
+        ),
+      },
       { path: paths.placeDetails, element: <PlaceDetailsPage /> },
     ],
   },

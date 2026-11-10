@@ -19,7 +19,7 @@ const focusRing =
  * Mesma ordem, ícones e destaque do item ativo nas duas larguras.
  */
 export function SideNavigation() {
-  const { area } = useSearchArea()
+  const { area, hasChosenLocation } = useSearchArea()
   const { favoriteIds } = useFavorites()
   const favoritesCount = favoriteIds.length
   const isDiscover = useMatch(paths.discover) !== null
@@ -53,14 +53,18 @@ export function SideNavigation() {
           className="size-5 shrink-0 text-ketchup-forte"
           strokeWidth={2.25}
         />
-        <span className="flex flex-col leading-tight">
-          <span className="sr-only text-xs text-texto-suave lg:not-sr-only">Buscando em</span>
-          <span className="text-xs font-bold lg:text-sm">
-            <span className="sr-only lg:not-sr-only">{area.label} · </span>
-            {area.radiusKm} km
+        {hasChosenLocation ? (
+          <span className="flex flex-col leading-tight">
+            <span className="sr-only text-xs text-texto-suave lg:not-sr-only">Buscando em</span>
+            <span className="text-xs font-bold lg:text-sm">
+              <span className="sr-only lg:not-sr-only">{area.label} · </span>
+              {area.radiusKm} km
+            </span>
+            <span className="sr-only"> — alterar região</span>
           </span>
-          <span className="sr-only"> — alterar região</span>
-        </span>
+        ) : (
+          <span className="text-xs leading-tight font-bold lg:text-sm">Definir região</span>
+        )}
       </Link>
 
       <nav aria-label="Navegação principal">
