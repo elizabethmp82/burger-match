@@ -3,6 +3,8 @@ import { useState } from 'react'
 import { Link } from 'react-router'
 import { buttonClasses } from '@/components/ui/buttonStyles'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { PlaceDetailsPanel } from '@/components/place/PlaceDetailsPanel'
+import { useMediaQuery, WIDE_DESKTOP_QUERY } from '@/hooks/useMediaQuery'
 import { usePlacesByIds } from '@/hooks/usePlaces'
 import { paths } from '@/routes/paths'
 import type { BurgerPlace } from '@/types/place.types'
@@ -34,13 +36,25 @@ function applyViewMode(places: BurgerPlace[], mode: ViewMode): BurgerPlace[] {
   }
 }
 
+/**
+ *   Celular: lista em uma coluna; tocar abre os Detalhes (layout aprovado).
+ *   Tablet:  mesma lista; vira 2 colunas quando a área tem largura para isso.
+ *   Desktop pequeno (1024–1279px): igual ao tablet (lista em grade).
+ *   Desktop ≥ 1280px: lista à esquerda + painel de detalhe à direita (mockup Desktop · Favoritos).
+ *   O painel precisa de ~600px para o mosaico de fotos; abaixo disso ficaria espremido.
+ */
 export function FavoritesPage() {
   const { favoriteIds, removeFavorite } = useFavorites()
   const favorites = usePlacesByIds(favoriteIds)
   const [mode, setMode] = useState<ViewMode>('nearest')
+  const [selectedId, setSelectedId] = useState<string>()
   const [announcement, setAnnouncement] = useState('')
+  const isWide = useMediaQuery(WIDE_DESKTOP_QUERY)
 
   const visible = applyViewMode(favorites, mode)
+  // Sem seleção válida (nada escolhido, removido ou filtrado), mostra o primeiro da lista.
+  const selected = visible.find((place) => place.placeId === selectedId) ?? visible[0]
+  const showPanel = isWide && selected !== undefined
 
   function handleRemove(place: BurgerPlace) {
     removeFavorite(place.placeId)
@@ -48,61 +62,107 @@ export function FavoritesPage() {
   }
 
   return (
-    <div className="page-container pt-6 pb-6">
-      <h1 className="text-4xl tracking-logo">Favoritos</h1>
-      <p className="mt-1 text-texto-suave">
-        {pluralize(favorites.length, 'hamburgueria salva', 'hamburguerias salvas')}
-      </p>
-
-      {favorites.length === 0 ? (
-        <EmptyState
-          icon={Heart}
-          title="Nenhuma favorita ainda"
-          description="Curta hamburguerias em Descobrir e elas aparecem aqui."
+    <div className="xl:flex xl:h-full">
+      <div
+        className={cn(
+          'page-container pt-6 pb-6',
+          showPanel &&
+            'xl:w-[27.5rem] xl:max-w-none xl:shrink-0 xl:overflow-y-auto xl:border-r-2 xl:border-tostado xl:px-6',
+        )}
+      >
+        <div
+          className={cn(
+            'flex flex-col',
+            !showPanel && 'md:flex-row md:items-end md:justify-between md:gap-4',
+          )}
         >
-          <Link to={paths.discover} className={buttonClasses('primary', 'w-full')}>
-            Descobrir hamburguerias
-          </Link>
-        </EmptyState>
-      ) : (
-        <>
-          <div role="group" aria-label="Ordenar e filtrar favoritos" className="mt-4 flex gap-2">
-            {viewModes.map(({ id, label }) => (
-              <button
-                key={id}
-                type="button"
-                aria-pressed={mode === id}
-                onClick={() => setMode(id)}
-                className={cn(
-                  'rounded-full border-2 border-tostado px-4 py-1.5 text-sm font-bold transition',
-                  'focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-ketchup',
-                  mode === id ? 'bg-tostado text-creme' : 'bg-superficie hover:bg-white',
-                )}
-              >
-                {label}
-              </button>
-            ))}
+          <div>
+            <h1 className="text-4xl tracking-logo">Favoritos</h1>
+            <p className="mt-1 text-texto-suave">
+              {pluralize(favorites.length, 'hamburgueria salva', 'hamburguerias salvas')}
+            </p>
           </div>
 
-          {visible.length > 0 ? (
-            <ul className="mt-4 flex flex-col gap-3">
+          {favorites.length > 0 && (
+            <div
+              role="group"
+              aria-label="Ordenar e filtrar favoritos"
+              className={cn('mt-4 flex flex-wrap gap-2', !showPanel && 'md:mt-0')}
+            >
+              {viewModes.map(({ id, label }) => (
+                <button
+                  key={id}
+                  type="button"
+                  aria-pressed={mode === id}
+                  onClick={() => setMode(id)}
+                  className={cn(
+                    'rounded-full border-2 border-tostado px-4 py-1.5 text-sm font-bold whitespace-nowrap transition',
+                    'focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-ketchup',
+                    mode === id ? 'bg-tostado text-creme' : 'bg-superficie hover:bg-white',
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {favorites.length === 0 ? (
+          <EmptyState
+            icon={Heart}
+            title="Nenhuma favorita ainda"
+            description="Curta hamburguerias em Descobrir e elas aparecem aqui."
+            className="md:mx-auto md:max-w-md"
+          >
+            <Link to={paths.discover} className={buttonClasses('primary', 'w-full')}>
+              Descobrir hamburguerias
+            </Link>
+          </EmptyState>
+        ) : visible.length > 0 ? (
+          // @container: as colunas dependem da largura DA LISTA, não da tela.
+          // Assim a mesma lista tem 1 coluna no celular e ao lado do painel, e 2 no tablet largo.
+          <div className="@container mt-4">
+            <ul className={cn('grid grid-cols-1 gap-3', !showPanel && '@2xl:grid-cols-2')}>
               {visible.map((place) => (
-                <FavoriteCard key={place.placeId} place={place} onRemove={handleRemove} />
+                <FavoriteCard
+                  key={place.placeId}
+                  place={place}
+                  onRemove={handleRemove}
+                  onSelect={showPanel ? () => setSelectedId(place.placeId) : undefined}
+                  selected={showPanel && place.placeId === selected.placeId}
+                />
               ))}
             </ul>
-          ) : (
-            <EmptyState
-              icon={Clock}
-              title="Nenhuma aberta agora"
-              description="Nenhuma das suas favoritas está aberta neste momento."
-            />
-          )}
-        </>
-      )}
+          </div>
+        ) : (
+          <EmptyState
+            icon={Clock}
+            title="Nenhuma aberta agora"
+            description="Nenhuma das suas favoritas está aberta neste momento."
+          />
+        )}
 
-      <p role="status" className="sr-only">
-        {announcement}
-      </p>
+        <p role="status" className="sr-only">
+          {announcement}
+        </p>
+      </div>
+
+      {showPanel && (
+        <section
+          aria-label="Detalhes da favorita selecionada"
+          className="min-w-0 flex-1 overflow-y-auto px-10 py-8"
+        >
+          <div className="mx-auto max-w-3xl">
+            {/* key: reinicia o estado interno do painel ao trocar de local. */}
+            <PlaceDetailsPanel
+              key={selected.placeId}
+              place={selected}
+              onAnnounce={setAnnouncement}
+            />
+          </div>
+        </section>
+      )}
     </div>
   )
 }

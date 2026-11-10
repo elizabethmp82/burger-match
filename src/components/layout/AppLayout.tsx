@@ -14,7 +14,8 @@ export function AppLayout() {
   return (
     <div className="mx-auto flex h-dvh w-full max-w-md flex-col md:max-w-none md:flex-row">
       <SideNavigation />
-      <main className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
+      {/* relative: mantém elementos absolutos (ex.: avisos sr-only) dentro da área que rola. */}
+      <main className="relative min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
         <Outlet />
       </main>
       <BottomNavigation />

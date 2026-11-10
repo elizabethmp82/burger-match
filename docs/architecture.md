@@ -116,6 +116,11 @@ O `AppLayout` ocupa `h-dvh` e só o `<main>` rola; a navegação inferior deixou
 
 Breakpoints padrão do Tailwind: celular `< md` (768px), tablet `md`, desktop `lg` (1024px). As classes do mobile aprovado não mudam; só se acrescentam variantes `md:`/`lg:`. Navegação: barra inferior no celular; `SideNavigation` a partir do tablet (compacta em `md`, completa em `lg`, como em `docs/design/Desktop · *.png`). Os itens vêm de `layout/navItems.ts`, fonte única para as duas barras. As páginas limitam a largura com a utility `page-container` (até 72rem).
 
+- **Visual muda com a largura → classes do Tailwind.** **Comportamento muda → `useMediaQuery`** (ex.: em Favoritos ≥ 1280px a linha _seleciona_ o local no painel; abaixo disso _abre_ os Detalhes).
+- **Lista + detalhe só a partir de `xl` (1280px):** entre 1024 e 1279px o painel ficaria com ~310px, pouco para o mosaico de fotos.
+- **Container queries (`@container`)** quando o que importa é a largura do componente, não da tela: a lista de Favoritos vira 2 colunas quando ela mesma tem ≥ 42rem, e o nome em `PlaceRow` cresce quando a linha tem ≥ 24rem.
+- **`<main>` é `relative`:** elementos `absolute` (como os avisos `sr-only`) ficam dentro da área que rola, sem criar rolagem na página inteira.
+
 ## Pontos de atenção conhecidos
 
 - `react-router@8` declara `engines.node >=22.22.0`; o ambiente atual usa Node 22.19.0. Funciona para SPA, mas recomenda-se atualizar o Node para a LTS mais recente.

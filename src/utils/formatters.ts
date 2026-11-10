@@ -7,7 +7,11 @@ const ratingFormat = new Intl.NumberFormat(LOCALE, {
   maximumFractionDigits: 1,
 })
 const countFormat = new Intl.NumberFormat(LOCALE)
-const kmFormat = new Intl.NumberFormat(LOCALE, { maximumFractionDigits: 1 })
+const kmFormat = new Intl.NumberFormat(LOCALE, {
+  minimumFractionDigits: 1,
+  maximumFractionDigits: 1,
+})
+const wholeKmFormat = new Intl.NumberFormat(LOCALE, { maximumFractionDigits: 0 })
 
 /** 4.8 → "4,8" */
 export function formatRating(rating: number): string {
@@ -19,13 +23,13 @@ export function formatCount(count: number): string {
   return countFormat.format(count)
 }
 
-/** 850 → "850 m" · 1240 → "1,2 km" · 12400 → "12 km" */
+/** 850 → "850 m" · 1240 → "1,2 km" · 4000 → "4,0 km" · 12400 → "12 km" */
 export function formatDistance(meters: number): string {
   if (meters < 1000) {
     return `${Math.max(10, Math.round(meters / 10) * 10)} m`
   }
   const km = meters / 1000
-  return `${kmFormat.format(km >= 10 ? Math.round(km) : km)} km`
+  return `${km >= 10 ? wholeKmFormat.format(km) : kmFormat.format(km)} km`
 }
 
 /** 2 → "$$" */

@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useParams } from 'react-router'
 import { OpenStatus } from '@/components/place/OpenStatus'
 import { PhotoTile } from '@/components/place/PhotoTile'
-import { PlaceMeta } from '@/components/place/PlaceMeta'
+import { RatingSummary } from '@/components/place/RatingSummary'
 import { buttonClasses, iconButtonClasses } from '@/components/ui/buttonStyles'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { useFavorites } from '@/features/favorites/hooks/useFavorites'
@@ -12,8 +12,9 @@ import { usePlace } from '@/hooks/usePlaces'
 import { paths } from '@/routes/paths'
 import type { BurgerPlace } from '@/types/place.types'
 import { cn } from '@/utils/cn'
-import { formatCount, formatDistance, formatPriceLevel } from '@/utils/formatters'
+import { formatDistance } from '@/utils/formatters'
 import { directionsUrl } from '@/utils/googleMaps'
+import { shareLink, shareResultMessage } from '@/utils/share'
 import { PhotoGallery } from '../components/PhotoGallery'
 
 /** Estilo comum de Ligar / Site / Compartilhar (dividem a largura igualmente). */
@@ -62,22 +63,8 @@ function PlaceDetails({ place, onBack }: { place: BurgerPlace; onBack: () => voi
   }
 
   async function handleShare() {
-    const url = window.location.href
-    // navigator.share não existe em todos os navegadores (ex.: Firefox desktop).
-    if (typeof navigator.share === 'function') {
-      try {
-        await navigator.share({ title: place.name, url })
-      } catch {
-        // O usuário fechou a janela de compartilhamento: nada a fazer.
-      }
-      return
-    }
-    try {
-      await navigator.clipboard.writeText(url)
-      setAnnouncement('Link copiado.')
-    } catch {
-      setAnnouncement('Não foi possível copiar o link.')
-    }
+    const result = await shareLink(place.name, window.location.href)
+    setAnnouncement(shareResultMessage(result))
   }
 
   return (
@@ -122,7 +109,7 @@ function PlaceDetails({ place, onBack }: { place: BurgerPlace; onBack: () => voi
       <section className="relative -mt-6 flex flex-col gap-4 rounded-t-3xl border-t-2 border-tostado bg-creme px-5 pt-6 pb-8">
         <div className="flex flex-col gap-2">
           <h1 className="text-4xl leading-tight tracking-logo">{place.name}</h1>
-          <DetailsMeta place={place} />
+          <RatingSummary place={place} />
         </div>
 
         <div className="flex flex-col gap-2">
@@ -213,27 +200,5 @@ function BackButton({ onClick }: { onClick: () => void }) {
     >
       <ChevronLeft aria-hidden="true" className="size-5" strokeWidth={2.5} />
     </button>
-  )
-}
-
-/** ★ 4,8 · 1.234 avaliações · $$ */
-function DetailsMeta({ place }: { place: BurgerPlace }) {
-  return (
-    <div className="flex flex-wrap items-center gap-x-1.5 text-texto-suave">
-      <PlaceMeta place={place} showDistance={false} />
-      {place.reviewCount !== undefined && (
-        <span>
-          <span aria-hidden="true">· </span>
-          {formatCount(place.reviewCount)} avaliações
-        </span>
-      )}
-      {place.priceLevel !== undefined && (
-        <span>
-          <span aria-hidden="true">· </span>
-          <span className="sr-only">Preço </span>
-          {formatPriceLevel(place.priceLevel)}
-        </span>
-      )}
-    </div>
   )
 }
