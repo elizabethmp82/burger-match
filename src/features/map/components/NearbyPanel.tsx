@@ -3,6 +3,8 @@ import { useEffect, useRef } from 'react'
 import { Link } from 'react-router'
 import { PhotoTile } from '@/components/place/PhotoTile'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { GoogleAttribution } from '@/components/ui/GoogleAttribution'
+import { LoadingState } from '@/components/ui/LoadState'
 import { placeDetailsPath } from '@/routes/paths'
 import type { BurgerPlace } from '@/types/place.types'
 import { cn } from '@/utils/cn'
@@ -25,6 +27,8 @@ interface NearbyPanelProps {
   onFilterChange: (filter: NearbyFilter) => void
   selectedId: string | undefined
   onSelect: (placeId: string) => void
+  /** Carregando: mostra o aviso em vez de "Nada por aqui". */
+  isPending?: boolean
 }
 
 /**
@@ -38,6 +42,7 @@ export function NearbyPanel({
   onFilterChange,
   selectedId,
   onSelect,
+  isPending = false,
 }: NearbyPanelProps) {
   const selectedRef = useRef<HTMLLIElement>(null)
 
@@ -57,9 +62,11 @@ export function NearbyPanel({
         Por perto
       </h1>
       <p className="mt-1 text-texto-suave">
-        {filter === 'all'
-          ? `${pluralize(totalCount, 'hamburgueria', 'hamburguerias')} nesta área`
-          : `${places.length} de ${pluralize(totalCount, 'hamburgueria', 'hamburguerias')}`}
+        {isPending
+          ? 'Procurando nesta área…'
+          : filter === 'all'
+            ? `${pluralize(totalCount, 'hamburgueria', 'hamburguerias')} nesta área`
+            : `${places.length} de ${pluralize(totalCount, 'hamburgueria', 'hamburguerias')}`}
       </p>
 
       <div role="group" aria-label="Filtrar hamburguerias" className="mt-4 flex flex-wrap gap-2">
@@ -80,7 +87,9 @@ export function NearbyPanel({
         ))}
       </div>
 
-      {places.length === 0 ? (
+      {isPending ? (
+        <LoadingState className="py-10" />
+      ) : places.length === 0 ? (
         <EmptyState icon={SearchX} title="Nada por aqui" description={emptyMessage} />
       ) : (
         <ul className="mt-4 flex flex-col gap-3">
@@ -94,6 +103,7 @@ export function NearbyPanel({
           })}
         </ul>
       )}
+      <GoogleAttribution className="mt-auto pt-6" />
     </section>
   )
 }

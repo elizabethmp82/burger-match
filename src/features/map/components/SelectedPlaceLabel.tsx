@@ -1,6 +1,6 @@
 import type { BurgerPlace } from '@/types/place.types'
 import { cn } from '@/utils/cn'
-import { formatDistance, formatRating } from '@/utils/formatters'
+import { describePlaceShort } from '../utils/describePlace'
 import type { BoxPosition } from '../utils/projectToBox'
 
 /**
@@ -17,11 +17,7 @@ export function SelectedPlaceLabel({
 }) {
   // Perto da borda direita, o balão abre para a esquerda do marcador.
   const opensLeft = position.x > 65
-  const details = [
-    place.rating !== undefined && `★ ${formatRating(place.rating)}`,
-    place.distanceMeters !== undefined && formatDistance(place.distanceMeters),
-    place.openNow !== undefined && (place.openNow ? 'Aberto' : 'Fechado'),
-  ].filter(Boolean)
+  const details = describePlaceShort(place)
 
   return (
     <div
@@ -35,7 +31,7 @@ export function SelectedPlaceLabel({
       )}
     >
       <p className="truncate font-bold">{place.name}</p>
-      {details.length > 0 && <p className="text-sm text-texto-suave">{details.join(' · ')}</p>}
+      {details && <p className="text-sm text-texto-suave">{details}</p>}
     </div>
   )
 }

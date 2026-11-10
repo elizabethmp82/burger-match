@@ -1,12 +1,16 @@
 import { ChevronLeft, Globe, Heart, MapPin, Navigation, Phone, SearchX, Share } from 'lucide-react'
+import { GoogleAttribution } from '@/components/ui/GoogleAttribution'
+import { isGoogleMapsEnabled } from '@/config/env'
 import { useRef, useState } from 'react'
 import { useParams } from 'react-router'
 import { OpenStatus } from '@/components/place/OpenStatus'
 import { PlaceDetailsPanel } from '@/components/place/PlaceDetailsPanel'
+import { PhotoCredit } from '@/components/place/PhotoCredit'
 import { PhotoTile } from '@/components/place/PhotoTile'
 import { RatingSummary } from '@/components/place/RatingSummary'
 import { buttonClasses, iconButtonClasses } from '@/components/ui/buttonStyles'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { ErrorState, LoadingState } from '@/components/ui/LoadState'
 import { useFavorites } from '@/features/favorites/hooks/useFavorites'
 import { useGoBack } from '@/hooks/useGoBack'
 import { TABLET_QUERY, useMediaQuery } from '@/hooks/useMediaQuery'
@@ -28,9 +32,23 @@ const secondaryAction = buttonClasses('secondary', 'flex-1 flex-col gap-1 px-2 t
  */
 export function PlaceDetailsPage() {
   const { placeId } = useParams<{ placeId: string }>()
-  const place = usePlace(placeId)
+  const { place, isPending, isError, retry } = usePlace(placeId)
   const goBack = useGoBack(paths.discover)
   const isTablet = useMediaQuery(TABLET_QUERY)
+
+  if (isPending || isError) {
+    return (
+      <div className="page-container flex min-h-full flex-col pt-6 md:max-w-2xl">
+        <BackButton onClick={goBack} />
+        <h1 className="sr-only">Detalhes da hamburgueria</h1>
+        {isPending ? (
+          <LoadingState label="Carregando detalhes…" className="flex-1" />
+        ) : (
+          <ErrorState onRetry={retry} />
+        )}
+      </div>
+    )
+  }
 
   if (!place) {
     return (
@@ -114,7 +132,7 @@ function WidePlaceDetails({ place, onBack }: { place: BurgerPlace; onBack: () =>
                   />
                   {/* Crédito do autor em cada foto (exigência de atribuição do Google). */}
                   <figcaption className="mt-1.5 text-xs text-texto-suave">
-                    Foto: {photo.authorName}
+                    <PhotoCredit photo={photo} />
                   </figcaption>
                 </figure>
               </li>
@@ -182,7 +200,7 @@ function PlaceDetails({ place, onBack }: { place: BurgerPlace; onBack: () => voi
         </div>
         {photo && (
           <span className="absolute bottom-10 left-4 rounded-md bg-tostado/80 px-2 py-0.5 text-xs font-semibold text-white">
-            Foto: {photo.authorName} · {photoIndex + 1} de {photos.length}
+            <PhotoCredit photo={photo} suffix={` · ${photoIndex + 1} de ${photos.length}`} />
           </span>
         )}
       </div>
@@ -261,7 +279,11 @@ function PlaceDetails({ place, onBack }: { place: BurgerPlace; onBack: () => voi
           </section>
         )}
 
-        <p className="text-xs text-texto-suave">Dados simulados para desenvolvimento.</p>
+        {isGoogleMapsEnabled ? (
+          <GoogleAttribution />
+        ) : (
+          <p className="text-xs text-texto-suave">Dados simulados para desenvolvimento.</p>
+        )}
       </section>
 
       <p role="status" className="sr-only">

@@ -1,4 +1,6 @@
 import { Globe, Heart, Navigation, Phone, Share } from 'lucide-react'
+import { GoogleAttribution } from '@/components/ui/GoogleAttribution'
+import { isGoogleMapsEnabled } from '@/config/env'
 import { useState } from 'react'
 import { buttonClasses, iconButtonClasses } from '@/components/ui/buttonStyles'
 import { useFavorites } from '@/features/favorites/hooks/useFavorites'
@@ -161,7 +163,11 @@ export function PlaceDetailsPanel({
         </button>
       </div>
 
-      <p className="text-xs text-texto-suave">Dados simulados para desenvolvimento.</p>
+      {isGoogleMapsEnabled ? (
+        <GoogleAttribution />
+      ) : (
+        <p className="text-xs text-texto-suave">Dados simulados para desenvolvimento.</p>
+      )}
 
       {!onAnnounce && (
         <p role="status" className="sr-only">

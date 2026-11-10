@@ -3,6 +3,9 @@ import { Link } from 'react-router'
 import { OpenStatus } from '@/components/place/OpenStatus'
 import { PhotoTile } from '@/components/place/PhotoTile'
 import { buttonClasses } from '@/components/ui/buttonStyles'
+import { GoogleAttribution } from '@/components/ui/GoogleAttribution'
+import { isGoogleMapsEnabled } from '@/config/env'
+import { GoogleMapView } from '@/features/map/components/GoogleMapView'
 import { MiniMap } from '@/features/map/components/MiniMap'
 import { placeDetailsPath } from '@/routes/paths'
 import type { Coordinates } from '@/types/location.types'
@@ -113,7 +116,17 @@ export function PlaceAside({ place, origin, className }: PlaceAsideProps) {
         )}
       </div>
 
-      <MiniMap center={origin} destination={place.location} className="h-36" />
+      {isGoogleMapsEnabled ? (
+        <GoogleMapView
+          center={origin}
+          places={[place]}
+          selectedId={place.placeId}
+          interactive={false}
+          className="h-36 shrink-0 rounded-2xl border-2 border-tostado"
+        />
+      ) : (
+        <MiniMap center={origin} destination={place.location} className="h-36" />
+      )}
 
       <a
         href={place.googleMapsUrl ?? directionsUrl(place.location)}
@@ -125,6 +138,8 @@ export function PlaceAside({ place, origin, className }: PlaceAsideProps) {
         Ver rota no Maps
         <span className="sr-only"> (abre em nova aba)</span>
       </a>
+
+      <GoogleAttribution className="mt-auto" />
     </aside>
   )
 }

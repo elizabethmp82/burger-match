@@ -2,6 +2,7 @@ import { Link } from 'react-router'
 import { placeDetailsPath } from '@/routes/paths'
 import type { BurgerPlace } from '@/types/place.types'
 import { cn } from '@/utils/cn'
+import { PhotoCredit } from './PhotoCredit'
 import { PhotoTile } from './PhotoTile'
 
 const tile = 'relative overflow-hidden rounded-3xl border-2 border-tostado'
@@ -35,13 +36,20 @@ export function PhotoMosaic({
         photos.length > 0 ? 'h-72 xl:h-80' : 'h-40',
       )}
     >
-      <PhotoTile
-        photo={main}
-        alt={`Foto de ${place.name}`}
-        label={main ? 'Foto do local' : undefined}
-        className={cn(tile, side.length > 0 ? 'col-span-2' : 'col-span-3', 'row-span-2')}
-        iconClassName="size-10"
-      />
+      <div className={cn(tile, side.length > 0 ? 'col-span-2' : 'col-span-3', 'row-span-2')}>
+        <PhotoTile
+          photo={main}
+          alt={`Foto de ${place.name}`}
+          label={main ? 'Foto do local' : undefined}
+          className="size-full"
+          iconClassName="size-10"
+        />
+        {main && (
+          <span className="absolute bottom-3 left-3 rounded-md bg-tostado/80 px-2 py-0.5 text-xs font-semibold text-white">
+            <PhotoCredit photo={main} />
+          </span>
+        )}
+      </div>
 
       {side.map((photo, index) => {
         const isLast = index === side.length - 1

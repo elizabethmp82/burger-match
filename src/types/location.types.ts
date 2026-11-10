@@ -26,12 +26,19 @@ export interface SearchArea {
   source: LocationSource
 }
 
-/** Bairro ou cidade que pode ser escolhido na busca manual. */
-export interface Region {
+/**
+ * Sugestão da busca manual de bairro/cidade. Não traz coordenadas: no Google,
+ * elas só são buscadas para a sugestão escolhida (economiza chamadas).
+ */
+export interface RegionSuggestion {
   id: string
   /** Ex.: "Pinheiros" */
   name: string
-  /** Contexto para diferenciar nomes iguais, ex.: "São Paulo, SP" */
+  /** Contexto para diferenciar nomes iguais, ex.: "São Paulo - SP" */
   context: string
+}
+
+/** Região da lista local (modo demonstração), já com o centro. */
+export interface Region extends RegionSuggestion {
   center: Coordinates
 }

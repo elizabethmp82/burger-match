@@ -1,5 +1,5 @@
 import { ChevronLeft, Hamburger, LoaderCircle, Navigation, TriangleAlert } from 'lucide-react'
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 import type { LocationRedirectState } from '@/components/layout/RequireLocation'
 import { buttonClasses, iconButtonClasses } from '@/components/ui/buttonStyles'
@@ -9,7 +9,8 @@ import { useGoBack } from '@/hooks/useGoBack'
 import { useSearchArea } from '@/hooks/useSearchArea'
 import { paths } from '@/routes/paths'
 import type { GeolocationErrorCode } from '@/services/location/geolocationService'
-import type { Region } from '@/types/location.types'
+import { resolveRegion } from '@/services/location/regionSearchService'
+import type { RegionSuggestion } from '@/types/location.types'
 import { cn } from '@/utils/cn'
 import { BrandIllustration } from './BrandIllustration'
 import { RegionSearch } from './RegionSearch'
@@ -57,9 +58,21 @@ export function LocationStep() {
     }
   }
 
-  function handleSelectRegion(region: Region) {
-    setLocation(region.name, region.center, 'manual')
-    void navigate(destination)
+  const [resolvingRegion, setResolvingRegion] = useState(false)
+  const [regionFailed, setRegionFailed] = useState(false)
+
+  async function handleSelectRegion(region: RegionSuggestion) {
+    setResolvingRegion(true)
+    setRegionFailed(false)
+    try {
+      const center = await resolveRegion(region)
+      setLocation(region.name, center, 'manual')
+      void navigate(destination)
+    } catch {
+      setRegionFailed(true)
+    } finally {
+      setResolvingRegion(false)
+    }
   }
 
   return (
@@ -123,7 +136,16 @@ export function LocationStep() {
             <span className="h-0.5 flex-1 bg-pao/30" />
           </div>
 
-          <RegionSearch onSelect={handleSelectRegion} inputRef={searchInputRef} />
+          <RegionSearch
+            onSelect={(region) => void handleSelectRegion(region)}
+            busy={resolvingRegion}
+            inputRef={searchInputRef}
+          />
+          {regionFailed && (
+            <LocationNotice tone="error">
+              Não foi possível carregar esse lugar agora. Verifique a conexão e tente de novo.
+            </LocationNotice>
+          )}
         </div>
       </div>
     </main>

@@ -1,11 +1,23 @@
-import { MapPin, Search } from 'lucide-react'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
+import { LoaderCircle, MapPin, Search } from 'lucide-react'
 import { useId, useState, type FormEvent, type KeyboardEvent, type Ref } from 'react'
-import { searchRegions } from '@/services/location/regionSearchService'
-import type { Region } from '@/types/location.types'
+import { isGoogleMapsEnabled } from '@/config/env'
+import { useDebouncedValue } from '@/hooks/useDebouncedValue'
+import {
+  MIN_QUERY_LENGTH,
+  normalizeText,
+  suggestRegions,
+} from '@/services/location/regionSearchService'
+import type { RegionSuggestion } from '@/types/location.types'
 import { cn } from '@/utils/cn'
 
+/** Espera após a última tecla antes de consultar o Google (a lista local responde na hora). */
+const TYPING_DELAY_MS = isGoogleMapsEnabled ? 300 : 0
+
 interface RegionSearchProps {
-  onSelect: (region: Region) => void
+  onSelect: (region: RegionSuggestion) => void
+  /** true enquanto a região escolhida está sendo carregada. */
+  busy?: boolean
   inputRef?: Ref<HTMLInputElement>
 }
 
@@ -14,7 +26,7 @@ interface RegionSearchProps {
  * o foco fica no campo e as setas destacam as sugestões (aria-activedescendant).
  * https://www.w3.org/WAI/ARIA/apg/patterns/combobox/
  */
-export function RegionSearch({ onSelect, inputRef }: RegionSearchProps) {
+export function RegionSearch({ onSelect, busy = false, inputRef }: RegionSearchProps) {
   const inputId = useId()
   const listId = useId()
   const hintId = useId()
@@ -23,11 +35,24 @@ export function RegionSearch({ onSelect, inputRef }: RegionSearchProps) {
   const [activeIndex, setActiveIndex] = useState(-1)
   const [notFound, setNotFound] = useState(false)
 
-  const suggestions = searchRegions(query)
+  const term = useDebouncedValue(query.trim(), TYPING_DELAY_MS)
+  const searchable = normalizeText(term).length >= MIN_QUERY_LENGTH
+  const suggestionsQuery = useQuery({
+    queryKey: ['regions', normalizeText(term)],
+    queryFn: () => suggestRegions(term),
+    enabled: searchable,
+    staleTime: 5 * 60_000,
+    // Mantém as sugestões anteriores na tela enquanto as novas chegam (sem "piscar").
+    placeholderData: keepPreviousData,
+  })
+  const suggestions = searchable ? (suggestionsQuery.data ?? []) : []
+  const searching = searchable && suggestionsQuery.isFetching
+  const typing = query.trim() !== term
+
   const showList = open && suggestions.length > 0
   const optionId = (index: number) => `${listId}-opcao-${index}`
 
-  function choose(region: Region) {
+  function choose(region: RegionSuggestion) {
     setQuery(region.name)
     setOpen(false)
     onSelect(region)
@@ -42,7 +67,7 @@ export function RegionSearch({ onSelect, inputRef }: RegionSearchProps) {
       event.preventDefault()
       setActiveIndex((index) => Math.max(index - 1, 0))
     } else if (event.key === 'Escape' && open) {
-      event.preventDefault() // não limpa o campo (comportamento padrão do type="search")
+      event.preventDefault()
       setOpen(false)
       setActiveIndex(-1)
     }
@@ -50,6 +75,9 @@ export function RegionSearch({ onSelect, inputRef }: RegionSearchProps) {
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (busy) return
+    // Ainda digitando ou buscando: as sugestões na tela podem ser de um texto anterior.
+    if (typing || searching) return
     // Enter sem sugestão destacada escolhe a primeira (a mais relevante).
     const region = suggestions[activeIndex] ?? suggestions[0]
     if (region) {
@@ -59,13 +87,18 @@ export function RegionSearch({ onSelect, inputRef }: RegionSearchProps) {
     }
   }
 
-  const statusMessage = !open
-    ? ''
-    : query.trim().length < 2
+  const statusMessage =
+    !open || !searchable
       ? ''
-      : suggestions.length === 0
-        ? 'Nenhum lugar encontrado.'
-        : `${suggestions.length} ${suggestions.length === 1 ? 'sugestão' : 'sugestões'}. Use as setas para escolher.`
+      : searching || typing
+        ? 'Buscando lugares…'
+        : suggestionsQuery.isError
+          ? 'Não foi possível buscar agora. Tente de novo.'
+          : suggestions.length === 0
+            ? 'Nenhum lugar encontrado.'
+            : `${suggestions.length} ${suggestions.length === 1 ? 'sugestão' : 'sugestões'}. Use as setas para escolher.`
+
+  const SearchIcon = searching || busy ? LoaderCircle : Search
 
   return (
     <form role="search" onSubmit={handleSubmit} className="flex flex-col gap-2">
@@ -75,7 +108,13 @@ export function RegionSearch({ onSelect, inputRef }: RegionSearchProps) {
 
       <div className="relative">
         <div className="flex items-center gap-3 rounded-2xl border-2 border-tostado bg-superficie px-4 focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-ketchup">
-          <Search aria-hidden="true" className="size-5 shrink-0 text-texto-suave" />
+          <SearchIcon
+            aria-hidden="true"
+            className={cn(
+              'size-5 shrink-0 text-texto-suave',
+              (searching || busy) && 'animate-spin motion-reduce:animate-none',
+            )}
+          />
           <input
             ref={inputRef}
             id={inputId}
@@ -145,7 +184,9 @@ export function RegionSearch({ onSelect, inputRef }: RegionSearchProps) {
       >
         {notFound
           ? `Não encontramos “${query.trim()}”. Tente o nome de um bairro ou de uma cidade.`
-          : 'Se você negar a permissão no navegador, é só buscar aqui.'}
+          : suggestionsQuery.isError
+            ? 'Não foi possível buscar agora. Verifique a conexão e tente de novo.'
+            : 'Se você negar a permissão no navegador, é só buscar aqui.'}
       </p>
 
       <p role="status" className="sr-only">

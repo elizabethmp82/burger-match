@@ -1,39 +1,42 @@
 /**
- * Serviço de hamburguerias.
+ * Serviço de hamburguerias — o único que as telas (via hooks) conhecem.
  *
- * Até a Etapa 4 ele lê os dados simulados de `mocks/`. As telas não sabem disso:
- * elas só conhecem as funções abaixo (através dos hooks). Na Etapa 4,
- * trocamos a implementação pela Places API sem mexer nos componentes.
+ * Com chave do Google: Places API (New). Sem chave: modo demonstração.
+ * Os componentes não sabem de qual fonte os dados vieram.
  */
-import { MOCK_PLACE_SEEDS, type MockPlaceSeed } from '@/mocks/places.mock'
+import { isGoogleMapsEnabled } from '@/config/env'
+import { fetchBurgerPlace, searchNearbyBurgers } from '@/services/google/googlePlacesService'
 import type { Coordinates, SearchArea } from '@/types/location.types'
 import type { BurgerPlace } from '@/types/place.types'
-import { distanceInMeters, offsetCoordinates } from '@/utils/distance'
+import { getOpenStatus } from '@/utils/openingHours'
+import { fetchMockPlace, searchNearbyMockPlaces } from './mockPlacesService'
 
-/** Posiciona o local simulado em volta do centro e calcula a distância até ele. */
-function placeAround({ offset, ...seed }: MockPlaceSeed, center: Coordinates): BurgerPlace {
-  const location = offsetCoordinates(center, offset.km, offset.bearing)
-  return { ...seed, location, distanceMeters: distanceInMeters(center, location) }
+export function getNearbyPlaces(area: SearchArea): Promise<BurgerPlace[]> {
+  return isGoogleMapsEnabled ? searchNearbyBurgers(area) : searchNearbyMockPlaces(area)
 }
 
-/** Hamburguerias dentro do raio da região, da mais próxima para a mais distante. */
-export function getNearbyPlaces(area: SearchArea): BurgerPlace[] {
-  const radiusMeters = area.radiusKm * 1000
-
-  return MOCK_PLACE_SEEDS.map((seed) => placeAround(seed, area.center))
-    .filter((place) => (place.distanceMeters ?? Infinity) <= radiusMeters)
-    .sort((a, b) => (a.distanceMeters ?? 0) - (b.distanceMeters ?? 0))
+/** `undefined` quando o local não existe (link antigo ou inválido). */
+export function getPlaceById(
+  placeId: string,
+  origin: Coordinates,
+): Promise<BurgerPlace | undefined> {
+  return isGoogleMapsEnabled ? fetchBurgerPlace(placeId, origin) : fetchMockPlace(placeId, origin)
 }
 
-/** Busca um local pelo ID, independentemente do raio (usado em Favoritos e Detalhes). */
-export function getPlaceById(placeId: string, origin: Coordinates): BurgerPlace | undefined {
-  const seed = MOCK_PLACE_SEEDS.find((candidate) => candidate.placeId === placeId)
-  return seed && placeAround(seed, origin)
-}
-
-/** Busca vários locais pelos IDs, mantendo a ordem recebida e ignorando IDs desconhecidos. */
-export function getPlacesByIds(placeIds: readonly string[], origin: Coordinates): BurgerPlace[] {
-  return placeIds
-    .map((placeId) => getPlaceById(placeId, origin))
-    .filter((place): place is BurgerPlace => place !== undefined)
+/**
+ * Recalcula "aberto agora" para o instante atual (RN11).
+ * Os dados ficam em cache por um tempo; o horário, não — por isso é calculado ao exibir.
+ * Locais sem grade de horários (ex.: dados simulados) ficam como estão.
+ */
+export function withCurrentOpenStatus(place: BurgerPlace, now = new Date()): BurgerPlace {
+  if (!place.openingSchedule) return place
+  const status = getOpenStatus(place.openingSchedule, now)
+  // Copia sem o status anterior e aplica o atual (ou nenhum, se não houver horários).
+  const updated: BurgerPlace = { ...place }
+  delete updated.openNow
+  delete updated.nextStatusChange
+  if (!status) return updated
+  updated.openNow = status.openNow
+  if (status.nextStatusChange) updated.nextStatusChange = status.nextStatusChange
+  return updated
 }

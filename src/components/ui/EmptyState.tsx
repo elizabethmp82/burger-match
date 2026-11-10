@@ -10,7 +10,7 @@ interface EmptyStateProps {
   children?: ReactNode
   /** h1 quando o estado vazio É a página (ex.: "Local não encontrado"). */
   titleAs?: 'h1' | 'h2'
-  className?: string
+  className?: string | undefined
 }
 
 /** Estado vazio ou de erro (RN12): ícone, título, explicação e o que fazer a seguir. */

@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { BrandIcon, Wordmark } from '@/components/ui/Brand'
+import { GoogleAttribution } from '@/components/ui/GoogleAttribution'
+import { ErrorState, LoadingState } from '@/components/ui/LoadState'
 import { useFavorites } from '@/features/favorites/hooks/useFavorites'
 import { useNearbyPlaces } from '@/hooks/usePlaces'
 import { useSearchArea } from '@/hooks/useSearchArea'
@@ -22,7 +24,8 @@ import { useDiscoveryDeck } from '../hooks/useDiscoveryDeck'
 export function DiscoverPage() {
   const navigate = useNavigate()
   const { area, setRadius } = useSearchArea()
-  const places = useNearbyPlaces()
+  const nearby = useNearbyPlaces()
+  const places = nearby.places
   const { favoriteIds } = useFavorites()
   const deck = useDiscoveryDeck(places)
   /** Mensagem lida por leitores de tela após cada ação (região role="status"). */
@@ -85,7 +88,11 @@ export function DiscoverPage() {
 
         <AreaPill area={area} />
 
-        {current ? (
+        {nearby.isPending ? (
+          <LoadingState className="flex-1" />
+        ) : nearby.isError ? (
+          <ErrorState onRetry={nearby.retry} className="flex-1 justify-center" />
+        ) : current ? (
           <>
             <SwipeDeck current={current} remainingCount={deck.remaining.length} />
             <SwipeActions
@@ -98,6 +105,7 @@ export function DiscoverPage() {
             <p className="hidden text-center text-sm text-texto-suave lg:block">
               Use as setas do teclado: ← pular · → curtir
             </p>
+            <GoogleAttribution className="text-center lg:hidden" />
           </>
         ) : (
           <DeckEmptyState

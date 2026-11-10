@@ -6,16 +6,16 @@ PWA para descobrir hamburguerias próximas com uma experiência de cards no esti
 
 ## Status
 
-| Etapa | Descrição               | Situação     |
-| ----- | ----------------------- | ------------ |
-| 1     | Configuração inicial    | ✅ Concluída |
-| 2     | Interfaces (dados mock) | ✅ Concluída |
-| 3     | Geolocalização          | ✅ Concluída |
-| 4     | Google Maps Platform    | ⏳           |
-| 5     | Swipe                   | ⏳           |
-| 6     | Favoritos               | ⏳           |
-| 7     | PWA                     | ⏳           |
-| 8     | Testes e publicação     | ⏳           |
+| Etapa | Descrição               | Situação                                         |
+| ----- | ----------------------- | ------------------------------------------------ |
+| 1     | Configuração inicial    | ✅ Concluída                                     |
+| 2     | Interfaces (dados mock) | ✅ Concluída                                     |
+| 3     | Geolocalização          | ✅ Concluída                                     |
+| 4     | Google Maps Platform    | 🧪 Implementada, aguardando teste com chave real |
+| 5     | Swipe                   | ⏳                                               |
+| 6     | Favoritos               | ⏳                                               |
+| 7     | PWA                     | ⏳                                               |
+| 8     | Testes e publicação     | ⏳                                               |
 
 ## Telas por tamanho
 
@@ -55,15 +55,16 @@ npm run dev        # http://localhost:5173
 
 ## Variáveis de ambiente
 
-Copie `.env.example` para `.env.local`. A chave do Google Maps será configurada na Etapa 4.
+Copie `.env.example` para `.env.local`. **Sem chave**, o app roda em modo demonstração (dados simulados, sem custo). Para usar dados reais do Google, siga [docs/google-maps-setup.md](docs/google-maps-setup.md).
 
 ## Documentação
 
 - [Escopo](docs/scope.md)
 - [Requisitos](docs/requirements.md)
 - [Arquitetura e decisões](docs/architecture.md)
+- [Configurar o Google Maps](docs/google-maps-setup.md)
 - [Mockups](docs/design/)
 
 ## Stack
 
-React 19 · TypeScript 6 · Vite 8 · Tailwind CSS 4 · React Router 8 · Lucide React · ESLint · Prettier
+React 19 · TypeScript 6 · Vite 8 · Tailwind CSS 4 · React Router 8 · TanStack Query 5 · Google Maps JavaScript API + Places API (New) · Lucide React · ESLint · Prettier

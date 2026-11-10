@@ -1,13 +1,16 @@
+import type { OpeningSchedule } from '@/utils/openingHours'
 import type { Coordinates } from './location.types'
 
 /**
  * Foto de um estabelecimento.
  * `url` fica vazia nos dados simulados: a interface mostra um placeholder.
- * Na Etapa 4 ela virá da Places API, sempre com o crédito do autor.
+ * Com a Places API, vem do Google e SEMPRE exibimos o crédito do autor
+ * (com link para o perfil, quando houver) — exigência das políticas do Google.
  */
 export interface PlacePhoto {
   id: string
   authorName: string
+  authorUrl?: string
   url?: string
 }
 
@@ -36,6 +39,12 @@ export interface BurgerPlace {
    * (ex.: "Seg–Qui 18:00–23:00"). Equivale a `weekdayDescriptions` da Places API.
    */
   openingHours?: readonly string[]
+  /**
+   * Grade de horários "bruta". Quando existe, `openNow`/`nextStatusChange` são
+   * recalculados na hora de exibir (RN11: status atualizado), em vez de ficarem
+   * congelados no momento em que os dados chegaram.
+   */
+  openingSchedule?: OpeningSchedule
   priceLevel?: PriceLevel
   photos?: PlacePhoto[]
   phoneNumber?: string

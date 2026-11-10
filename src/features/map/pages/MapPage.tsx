@@ -2,11 +2,14 @@ import { MapPinOff } from 'lucide-react'
 import { useState } from 'react'
 import { PlaceRow } from '@/components/place/PlaceRow'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { ErrorState, LoadingState } from '@/components/ui/LoadState'
+import { isGoogleMapsEnabled } from '@/config/env'
 import { useFavorites } from '@/features/favorites/hooks/useFavorites'
 import { DESKTOP_QUERY, useMediaQuery } from '@/hooks/useMediaQuery'
 import { useNearbyPlaces } from '@/hooks/usePlaces'
 import { useSearchArea } from '@/hooks/useSearchArea'
 import type { BurgerPlace } from '@/types/place.types'
+import { GoogleMapView } from '../components/GoogleMapView'
 import { MockMap } from '../components/MockMap'
 import { NearbyPanel, type NearbyFilter } from '../components/NearbyPanel'
 import type { BoxInsets } from '../utils/projectToBox'
@@ -21,7 +24,8 @@ const DESKTOP_INSETS: BoxInsets = { top: 24, bottom: 86, left: 10, right: 88 }
  */
 export function MapPage() {
   const { area } = useSearchArea()
-  const places = useNearbyPlaces()
+  const nearby = useNearbyPlaces()
+  const places = nearby.places
   const { isFavorite } = useFavorites()
   const isDesktop = useMediaQuery(DESKTOP_QUERY)
   const [filter, setFilter] = useState<NearbyFilter>('all')
@@ -44,27 +48,55 @@ export function MapPage() {
           onFilterChange={setFilter}
           selectedId={selected?.placeId}
           onSelect={setSelectedId}
+          isPending={nearby.isPending}
         />
       ) : (
         <h1 className="sr-only">Mapa</h1>
       )}
 
       <div className="relative h-full min-w-0 flex-1">
-        <MockMap
-          center={area.center}
-          places={shown}
-          fitTo={places.map((place) => place.location)}
-          selectedId={selected?.placeId}
-          onSelect={setSelectedId}
-          {...(isDesktop && { insets: DESKTOP_INSETS, showSelectedLabel: true })}
-        />
+        {isGoogleMapsEnabled ? (
+          <GoogleMapView
+            center={area.center}
+            places={shown}
+            fitTo={places.map((place) => place.location)}
+            selectedId={selected?.placeId}
+            onSelect={setSelectedId}
+            showSelectedLabel={isDesktop}
+            // No celular/tablet o card do selecionado cobre ~150px da base do mapa.
+            bottomInset={isDesktop ? 0 : 150}
+            className="absolute inset-0"
+          />
+        ) : (
+          <>
+            <MockMap
+              center={area.center}
+              places={shown}
+              fitTo={places.map((place) => place.location)}
+              selectedId={selected?.placeId}
+              onSelect={setSelectedId}
+              {...(isDesktop && { insets: DESKTOP_INSETS, showSelectedLabel: true })}
+            />
+            <p className="absolute top-4 left-1/2 z-30 -translate-x-1/2 rounded-full border-2 border-tostado bg-superficie px-3 py-1 text-xs font-semibold whitespace-nowrap">
+              Mapa ilustrativo · {area.label}, {area.radiusKm} km
+            </p>
+          </>
+        )}
 
-        <p className="absolute top-4 left-1/2 z-30 -translate-x-1/2 rounded-full border-2 border-tostado bg-superficie px-3 py-1 text-xs font-semibold whitespace-nowrap">
-          Mapa ilustrativo · {area.label}, {area.radiusKm} km
-        </p>
+        {(nearby.isPending || nearby.isError) && (
+          <div className="absolute inset-x-4 top-1/2 z-40 mx-auto max-w-sm -translate-y-1/2 rounded-3xl border-2 border-tostado bg-superficie px-4 shadow-offset">
+            {nearby.isPending ? (
+              <LoadingState className="py-8" />
+            ) : (
+              <ErrorState onRetry={nearby.retry} className="py-6" />
+            )}
+          </div>
+        )}
 
         {/* No desktop o local selecionado aparece destacado na lista ao lado. */}
         {!isDesktop &&
+          !nearby.isPending &&
+          !nearby.isError &&
           (selected ? (
             <div
               className="absolute inset-x-4 bottom-4 z-30 md:inset-x-0 md:mx-auto md:w-full md:max-w-md"

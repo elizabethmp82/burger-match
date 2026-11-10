@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { OpenStatus } from '@/components/place/OpenStatus'
+import { PhotoCredit } from '@/components/place/PhotoCredit'
 import { PhotoTile } from '@/components/place/PhotoTile'
 import { PlaceMeta } from '@/components/place/PlaceMeta'
 import { placeDetailsPath } from '@/routes/paths'
@@ -61,8 +62,9 @@ export function BurgerCard({ place }: { place: BurgerPlace }) {
         )}
 
         {photo && (
-          <span className="pointer-events-none absolute right-3 bottom-3 rounded-md bg-tostado/80 px-2 py-0.5 text-xs font-semibold text-white">
-            Foto: {photo.authorName}
+          // z-10: fica acima do botão "próxima foto", para o link do autor ser clicável.
+          <span className="absolute right-3 bottom-3 z-10 rounded-md bg-tostado/80 px-2 py-0.5 text-xs font-semibold text-white">
+            <PhotoCredit photo={photo} />
           </span>
         )}
       </div>

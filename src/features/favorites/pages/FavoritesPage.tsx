@@ -3,6 +3,8 @@ import { useState } from 'react'
 import { Link } from 'react-router'
 import { buttonClasses } from '@/components/ui/buttonStyles'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { GoogleAttribution } from '@/components/ui/GoogleAttribution'
+import { ErrorState, LoadingState } from '@/components/ui/LoadState'
 import { PlaceDetailsPanel } from '@/components/place/PlaceDetailsPanel'
 import { useMediaQuery, WIDE_DESKTOP_QUERY } from '@/hooks/useMediaQuery'
 import { usePlacesByIds } from '@/hooks/usePlaces'
@@ -22,7 +24,7 @@ const viewModes: ReadonlyArray<{ id: ViewMode; label: string }> = [
 ]
 
 /** Ordena ou filtra sem alterar a lista original (toSorted/filter criam cópias). */
-function applyViewMode(places: BurgerPlace[], mode: ViewMode): BurgerPlace[] {
+function applyViewMode(places: readonly BurgerPlace[], mode: ViewMode): BurgerPlace[] {
   const byDistance = (a: BurgerPlace, b: BurgerPlace) =>
     (a.distanceMeters ?? Infinity) - (b.distanceMeters ?? Infinity)
 
@@ -45,7 +47,8 @@ function applyViewMode(places: BurgerPlace[], mode: ViewMode): BurgerPlace[] {
  */
 export function FavoritesPage() {
   const { favoriteIds, removeFavorite } = useFavorites()
-  const favorites = usePlacesByIds(favoriteIds)
+  const favoritesQuery = usePlacesByIds(favoriteIds)
+  const favorites = favoritesQuery.places
   const [mode, setMode] = useState<ViewMode>('nearest')
   const [selectedId, setSelectedId] = useState<string>()
   const [announcement, setAnnouncement] = useState('')
@@ -79,11 +82,11 @@ export function FavoritesPage() {
           <div>
             <h1 className="text-4xl tracking-logo">Favoritos</h1>
             <p className="mt-1 text-texto-suave">
-              {pluralize(favorites.length, 'hamburgueria salva', 'hamburguerias salvas')}
+              {pluralize(favoriteIds.length, 'hamburgueria salva', 'hamburguerias salvas')}
             </p>
           </div>
 
-          {favorites.length > 0 && (
+          {favoriteIds.length > 0 && (
             <div
               role="group"
               aria-label="Ordenar e filtrar favoritos"
@@ -108,7 +111,7 @@ export function FavoritesPage() {
           )}
         </div>
 
-        {favorites.length === 0 ? (
+        {favoriteIds.length === 0 ? (
           <EmptyState
             icon={Heart}
             title="Nenhuma favorita ainda"
@@ -119,6 +122,10 @@ export function FavoritesPage() {
               Descobrir hamburguerias
             </Link>
           </EmptyState>
+        ) : favorites.length === 0 && favoritesQuery.isPending ? (
+          <LoadingState label="Carregando suas favoritas…" />
+        ) : favorites.length === 0 && favoritesQuery.isError ? (
+          <ErrorState onRetry={favoritesQuery.retry} />
         ) : visible.length > 0 ? (
           // @container: as colunas dependem da largura DA LISTA, não da tela.
           // Assim a mesma lista tem 1 coluna no celular e ao lado do painel, e 2 no tablet largo.
@@ -142,6 +149,8 @@ export function FavoritesPage() {
             description="Nenhuma das suas favoritas está aberta neste momento."
           />
         )}
+
+        {favorites.length > 0 && <GoogleAttribution className="mt-6" />}
 
         <p role="status" className="sr-only">
           {announcement}

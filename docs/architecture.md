@@ -37,7 +37,8 @@ src/
 ├── hooks/                        useSearchArea, usePlaces (useNearbyPlaces/usePlace/usePlacesByIds), useGoBack
 ├── mocks/places.mock.ts          16 hamburguerias fictícias, posicionadas em volta do centro (12 dentro de 5 km)
 ├── mocks/regions.mock.ts         Bairros e cidades para a busca manual (até a Etapa 4)
-├── services/places/              placesService (lê o mock; Places API na Etapa 4)
+├── services/places/              placesService (fachada) + mockPlacesService
+├── services/google/              googleMapsLoader, googlePlacesService, placeMapper
 ├── services/location/            geolocationService (GPS) e regionSearchService (busca manual)
 ├── types/                        place.types, location.types
 ├── utils/                        distance (Haversine), formatters (pt-BR), googleMaps, cn
@@ -133,6 +134,17 @@ Breakpoints padrão do Tailwind: celular `< md` (768px), tablet `md`, desktop `l
 - **Busca manual:** combobox acessível (padrão WAI-ARIA) sobre uma lista local de bairros e cidades, sem acentos/maiúsculas na comparação. Na Etapa 4 o serviço passa a usar o Autocomplete da Places API, sem mudar a interface.
 - **Mocks relativos ao centro:** os locais simulados guardam distância e direção (`offset`), não coordenadas. Assim o app funciona em qualquer cidade até a integração com o Google.
 - **Sessão do baralho por região:** trocar de região recomeça o baralho; mudar só o raio, não. Favoritos não são afetados.
+
+### ADR-014 — Google Maps Platform (Etapa 4)
+
+- **Duas fontes, uma interface:** `services/places/placesService` e `services/location/regionSearchService` escolhem entre o Google (`services/google/*`) e os dados simulados conforme `isGoogleMapsEnabled` (há chave em `VITE_GOOGLE_MAPS_API_KEY`). Sem chave = modo demonstração, útil para desenvolver sem custo e para os testes da Etapa 8.
+- **Biblioteca oficial no navegador:** `@googlemaps/js-api-loader` (`setOptions` + `importLibrary`) e a classe `Place` da Places API (New) — sem servidor próprio. A chave é pública por natureza e deve ser restrita por domínio e por API (docs/google-maps-setup.md).
+- **TanStack Query para dados remotos:** carregamento, erro, nova tentativa e cache. `staleTime` de 30 min, sem refetch no foco e 1 nova tentativa — escolhas para economizar chamadas pagas. A busca por proximidade já preenche o cache de cada local (`['places','detail',id]`), então Detalhes e Favoritos vindos da busca não geram novas chamadas. A distância é recalculada na exibição, por isso o cache de um local não depende da região.
+- **Campos:** `placeMapper.ts` concentra a lista de campos pedidos (o preço depende do campo mais caro) e a conversão `Place → BurgerPlace`. Lugares fechados definitivamente são descartados; no máximo 10 fotos por local.
+- **"Aberto agora" sempre atual (RN11):** guardamos a grade semanal (`openingSchedule`) e calculamos o status ao exibir (`utils/openingHours.ts`, função pura), atualizado a cada minuto (`useNow`).
+- **Mapa:** `GoogleMapView` tem as mesmas props do `MockMap`; cria o mapa uma vez e só atualiza marcadores (`AdvancedMarkerElement` + `PinElement` nas cores da marca), enquadramento e seleção. Textos vindos da API entram no DOM por `textContent`, nunca `innerHTML`.
+- **Autocomplete:** sugestões com `(regions)` restritas ao Brasil, token de sessão de cobrança, espera de 300 ms entre digitações; as coordenadas só são buscadas para a sugestão escolhida.
+- **Atribuição:** fotos com crédito do autor (link quando houver) e "Dados de Google Maps" onde dados do Google aparecem fora do mapa.
 
 ## Pontos de atenção conhecidos
 
