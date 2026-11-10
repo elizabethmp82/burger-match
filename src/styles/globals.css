@@ -1,0 +1,51 @@
+@import 'tailwindcss';
+
+/*
+ * Tokens da identidade visual do BurgerMatch.
+ * No Tailwind v4, cada variável em @theme gera utilitários automaticamente:
+ *   --color-ketchup  → bg-ketchup, text-ketchup, border-ketchup...
+ *   --font-display   → font-display
+ */
+@theme {
+  /* Paleta oficial */
+  --color-ketchup: #e63b2e;
+  --color-mostarda: #ffb627;
+  --color-pao: #f29e38;
+  --color-tostado: #2b1a12;
+  --color-alface: #3fa65a;
+  --color-creme: #fff4e0;
+
+  /*
+   * Derivados (não são cores novas: são misturas da paleta oficial).
+   * superficie: fundo de cards/barras, um pouco mais claro que o creme.
+   * texto-suave: texto secundário (endereços, legendas) com contraste AA sobre o creme.
+   */
+  --color-superficie: color-mix(in oklab, var(--color-creme) 45%, white);
+  --color-texto-suave: color-mix(in oklab, var(--color-tostado) 78%, var(--color-creme));
+
+  /* Tipografia oficial */
+  --font-display: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+  /* Espaçamento entre letras do logotipo (-3,5%) */
+  --tracking-logo: -0.035em;
+
+  /* Sombra "deslocada" dos cards e botões nos mockups */
+  --shadow-offset: 0 4px 0 0 var(--color-tostado);
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-creme font-sans text-tostado antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-display font-extrabold;
+  }
+}
