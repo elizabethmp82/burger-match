@@ -9,7 +9,7 @@ PWA para descobrir hamburguerias próximas com uma experiência de cards no esti
 | Etapa | Descrição               | Situação     |
 | ----- | ----------------------- | ------------ |
 | 1     | Configuração inicial    | ✅ Concluída |
-| 2     | Interfaces (dados mock) | ⏳           |
+| 2     | Interfaces (dados mock) | ✅ Concluída |
 | 3     | Geolocalização          | ⏳           |
 | 4     | Google Maps Platform    | ⏳           |
 | 5     | Swipe                   | ⏳           |

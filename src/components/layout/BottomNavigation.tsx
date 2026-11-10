@@ -1,26 +1,15 @@
-import { Compass, Heart, MapPin, type LucideIcon } from 'lucide-react'
+import { Heart } from 'lucide-react'
 import { NavLink } from 'react-router'
-import { paths } from '@/routes/paths'
+import { navItems } from './navItems'
 
-interface NavItem {
-  to: string
-  label: string
-  icon: LucideIcon
-}
-
-const navItems: readonly NavItem[] = [
-  { to: paths.discover, label: 'Descobrir', icon: Compass },
-  { to: paths.favorites, label: 'Favoritos', icon: Heart },
-  { to: paths.map, label: 'Mapa', icon: MapPin },
-]
-
+/** Navegação do celular. A partir de 768px (md) é substituída pela SideNavigation. */
 export function BottomNavigation() {
   return (
     <nav
       aria-label="Navegação principal"
-      className="fixed inset-x-0 bottom-0 z-10 border-t-2 border-tostado bg-superficie pb-[env(safe-area-inset-bottom)]"
+      className="shrink-0 border-t-2 border-tostado bg-superficie pb-[env(safe-area-inset-bottom)] md:hidden"
     >
-      <ul className="mx-auto flex max-w-md">
+      <ul className="flex">
         {navItems.map(({ to, label, icon: Icon }) => (
           <li key={to} className="flex-1">
             <NavLink

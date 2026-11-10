@@ -1,0 +1,9 @@
+# Mantém LF no repositório e na pasta de trabalho, independentemente do
+# core.autocrlf do Windows (o Prettier usa endOfLine: "lf").
+* text=auto eol=lf
+
+# Binários: nunca converter.
+*.png binary
+*.jpg binary
+*.webp binary
+*.ico binary

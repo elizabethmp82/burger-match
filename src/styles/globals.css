@@ -22,6 +22,13 @@
    */
   --color-superficie: color-mix(in oklab, var(--color-creme) 45%, white);
   --color-texto-suave: color-mix(in oklab, var(--color-tostado) 78%, var(--color-creme));
+  /*
+   * Versões "fortes" para garantir contraste AA (≥ 4,5:1):
+   * ketchup-forte: fundo de botões com texto branco e textos vermelhos ("Fechado").
+   * alface-forte: textos verdes ("Aberto"); o alface puro tem só ~3:1 sobre o creme.
+   */
+  --color-ketchup-forte: color-mix(in oklab, var(--color-ketchup) 88%, var(--color-tostado));
+  --color-alface-forte: color-mix(in oklab, var(--color-alface) 65%, var(--color-tostado));
 
   /* Tipografia oficial */
   --font-display: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
@@ -47,5 +54,41 @@
   h2,
   h3 {
     @apply font-display font-extrabold;
+  }
+}
+
+/*
+ * Container padrão das páginas: mesma largura máxima e margens em todas as telas.
+ *   Celular: 16px de margem lateral (igual ao layout aprovado).
+ *   Tablet+: 32px de margem; largura máxima de 72rem (1152px) para não esticar.
+ * Uso: <div className="page-container">. Uma página pode estreitar com max-w-*.
+ */
+@utility page-container {
+  margin-inline: auto;
+  width: 100%;
+  max-width: var(--container-6xl);
+  padding-inline: --spacing(4);
+
+  @media (width >= 48rem) {
+    padding-inline: --spacing(8);
+  }
+}
+
+@layer components {
+  /*
+   * Fundo do mapa ilustrativo (Etapa 2): "ruas" desenhadas com gradientes.
+   * Será substituído pelo Google Maps na Etapa 4.
+   */
+  .mock-map {
+    background-color: color-mix(in oklab, var(--color-creme) 80%, var(--color-pao));
+    background-image:
+      linear-gradient(
+        100deg,
+        transparent 46%,
+        color-mix(in oklab, var(--color-mostarda) 70%, white) 46% 48.5%,
+        transparent 48.5%
+      ),
+      repeating-linear-gradient(90deg, transparent 0 88px, white 88px 100px),
+      repeating-linear-gradient(0deg, transparent 0 120px, white 120px 132px);
   }
 }
