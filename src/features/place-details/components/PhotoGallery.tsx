@@ -49,7 +49,7 @@ export function PhotoGallery({ photos, placeName, selectedIndex, onSelect }: Pho
                 index={index}
                 alt={`Foto ${index + 1} de ${placeName}`}
                 className="size-full"
-                iconClassName="size-6"
+                iconClassName={isMoreTile ? 'hidden' : 'size-6'}
               />
               {isMoreTile && (
                 <span className="absolute inset-0 grid place-items-center bg-tostado/40 text-xl font-bold text-white">

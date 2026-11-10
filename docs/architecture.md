@@ -56,15 +56,15 @@ Os contexts ficam acima do `RouterProvider`, então região, favoritos e decisõ
 
 ## Rotas
 
-| Rota              | Página                                | Layout                  |
-| ----------------- | ------------------------------------- | ----------------------- |
-| `/`               | WelcomePage                           | Próprio (sem navegação) |
-| `/?step=location` | WelcomePage (etapa "Onde você está?") | Próprio                 |
-| `/discover`       | DiscoverPage                          | AppLayout               |
-| `/favorites`      | FavoritesPage                         | AppLayout               |
-| `/map`            | MapPage                               | AppLayout               |
-| `/place/:placeId` | PlaceDetailsPage                      | Próprio (sem navegação) |
-| `*`               | → `/`                                 | —                       |
+| Rota              | Página                                | Layout                                    |
+| ----------------- | ------------------------------------- | ----------------------------------------- |
+| `/`               | WelcomePage                           | Próprio (sem navegação)                   |
+| `/?step=location` | WelcomePage (etapa "Onde você está?") | Próprio                                   |
+| `/discover`       | DiscoverPage                          | AppLayout                                 |
+| `/favorites`      | FavoritesPage                         | AppLayout                                 |
+| `/map`            | MapPage                               | AppLayout                                 |
+| `/place/:placeId` | PlaceDetailsPage                      | AppLayout (sem barra inferior no celular) |
+| `*`               | → `/`                                 | —                                         |
 
 ## Registro de decisões técnicas
 
@@ -119,6 +119,7 @@ Breakpoints padrão do Tailwind: celular `< md` (768px), tablet `md`, desktop `l
 - **Visual muda com a largura → classes do Tailwind.** **Comportamento muda → `useMediaQuery`** (ex.: em Favoritos ≥ 1280px a linha _seleciona_ o local no painel; abaixo disso _abre_ os Detalhes).
 - **Lista + detalhe só a partir de `xl` (1280px):** entre 1024 e 1279px o painel ficaria com ~310px, pouco para o mosaico de fotos.
 - **Container queries (`@container`)** quando o que importa é a largura do componente, não da tela: a lista de Favoritos vira 2 colunas quando ela mesma tem ≥ 42rem, e o nome em `PlaceRow` cresce quando a linha tem ≥ 24rem.
+- **Detalhes dentro do `AppLayout`:** ganha a barra lateral no tablet/desktop; no celular o layout esconde a navegação inferior nessa rota. A partir de 768px a página usa o `PlaceDetailsPanel` (o mesmo do Favoritos) + galeria completa com crédito por foto.
 - **`<main>` é `relative`:** elementos `absolute` (como os avisos `sr-only`) ficam dentro da área que rola, sem criar rolagem na página inteira.
 
 ## Pontos de atenção conhecidos

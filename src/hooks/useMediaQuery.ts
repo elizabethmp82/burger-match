@@ -1,5 +1,8 @@
 import { useCallback, useSyncExternalStore } from 'react'
 
+/** Mesmo ponto de corte do `md:` do Tailwind (48rem = 768px). */
+export const TABLET_QUERY = '(min-width: 48rem)'
+
 /** Mesmo ponto de corte do `lg:` do Tailwind (64rem = 1024px). */
 export const DESKTOP_QUERY = '(min-width: 64rem)'
 

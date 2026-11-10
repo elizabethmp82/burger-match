@@ -8,8 +8,9 @@ import { PlaceDetailsPage } from '@/features/place-details/pages/PlaceDetailsPag
 import { paths } from './paths'
 
 /**
- * Boas-vindas e Detalhes ficam fora do AppLayout (sem navegação inferior),
- * conforme docs/scope.md §3.
+ * Boas-vindas fica fora do AppLayout (sem navegação).
+ * Detalhes fica dentro: no tablet/desktop mostra a barra lateral, e no celular
+ * o AppLayout esconde a navegação inferior nesta rota (docs/scope.md §3).
  */
 export const router = createBrowserRouter([
   { path: paths.welcome, element: <WelcomePage /> },
@@ -19,8 +20,8 @@ export const router = createBrowserRouter([
       { path: paths.discover, element: <DiscoverPage /> },
       { path: paths.favorites, element: <FavoritesPage /> },
       { path: paths.map, element: <MapPage /> },
+      { path: paths.placeDetails, element: <PlaceDetailsPage /> },
     ],
   },
-  { path: paths.placeDetails, element: <PlaceDetailsPage /> },
   { path: '*', element: <Navigate to={paths.welcome} replace /> },
 ])

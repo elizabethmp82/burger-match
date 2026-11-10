@@ -1,13 +1,15 @@
 import { ChevronLeft, Globe, Heart, MapPin, Navigation, Phone, SearchX, Share } from 'lucide-react'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useParams } from 'react-router'
 import { OpenStatus } from '@/components/place/OpenStatus'
+import { PlaceDetailsPanel } from '@/components/place/PlaceDetailsPanel'
 import { PhotoTile } from '@/components/place/PhotoTile'
 import { RatingSummary } from '@/components/place/RatingSummary'
 import { buttonClasses, iconButtonClasses } from '@/components/ui/buttonStyles'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { useFavorites } from '@/features/favorites/hooks/useFavorites'
 import { useGoBack } from '@/hooks/useGoBack'
+import { TABLET_QUERY, useMediaQuery } from '@/hooks/useMediaQuery'
 import { usePlace } from '@/hooks/usePlaces'
 import { paths } from '@/routes/paths'
 import type { BurgerPlace } from '@/types/place.types'
@@ -20,17 +22,23 @@ import { PhotoGallery } from '../components/PhotoGallery'
 /** Estilo comum de Ligar / Site / Compartilhar (dividem a largura igualmente). */
 const secondaryAction = buttonClasses('secondary', 'flex-1 flex-col gap-1 px-2 text-sm')
 
+/**
+ *   Celular: foto no topo + "folha" com as informações (layout aprovado).
+ *   Tablet/desktop: painel de detalhe (o mesmo de Favoritos) + galeria completa.
+ */
 export function PlaceDetailsPage() {
   const { placeId } = useParams<{ placeId: string }>()
   const place = usePlace(placeId)
   const goBack = useGoBack(paths.discover)
+  const isTablet = useMediaQuery(TABLET_QUERY)
 
   if (!place) {
     return (
-      <main className="mx-auto flex min-h-dvh max-w-md flex-col px-4 pt-6">
+      <div className="page-container flex min-h-full flex-col pt-6 md:max-w-2xl">
         <BackButton onClick={goBack} />
         <EmptyState
           icon={SearchX}
+          titleAs="h1"
           title="Local não encontrado"
           description="Esta hamburgueria não está disponível. Ela pode ter saído do Google Maps ou o link está incorreto."
         >
@@ -38,12 +46,84 @@ export function PlaceDetailsPage() {
             Voltar
           </button>
         </EmptyState>
-      </main>
+      </div>
     )
   }
 
-  // A key reinicia a foto selecionada ao navegar de um local para outro.
-  return <PlaceDetails key={place.placeId} place={place} onBack={goBack} />
+  // A key reinicia o estado interno (foto selecionada etc.) ao trocar de local.
+  return isTablet ? (
+    <WidePlaceDetails key={place.placeId} place={place} onBack={goBack} />
+  ) : (
+    <PlaceDetails key={place.placeId} place={place} onBack={goBack} />
+  )
+}
+
+/**
+ * Tablet e desktop: Voltar + o mesmo painel do Favoritos (desktop) + galeria completa.
+ * Largura limitada para manter a leitura confortável e as fotos em boa proporção.
+ */
+function WidePlaceDetails({ place, onBack }: { place: BurgerPlace; onBack: () => void }) {
+  const galleryRef = useRef<HTMLElement>(null)
+  const photos = place.photos ?? []
+
+  function showAllPhotos() {
+    const gallery = galleryRef.current
+    if (!gallery) return
+    // Foco primeiro (sem rolar): focar depois pode interromper a rolagem suave.
+    // O foco leva leitores de tela e teclado direto para a galeria.
+    gallery.focus({ preventScroll: true })
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    gallery.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' })
+  }
+
+  return (
+    <div className="page-container max-w-4xl pt-6 pb-10 lg:pt-8">
+      <BackButton onClick={onBack} />
+
+      <div className="mt-5">
+        <PlaceDetailsPanel
+          place={place}
+          titleAs="h1"
+          onShowAllPhotos={photos.length > 3 ? showAllPhotos : undefined}
+        />
+      </div>
+
+      {photos.length > 1 && (
+        <section
+          ref={galleryRef}
+          tabIndex={-1}
+          aria-labelledby="all-photos-title"
+          className="mt-10 scroll-mt-6 outline-none"
+        >
+          <h2 id="all-photos-title" className="text-2xl tracking-logo">
+            Fotos{' '}
+            <span className="font-sans text-base font-semibold text-texto-suave">
+              ({photos.length})
+            </span>
+          </h2>
+          <ul className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+            {photos.map((photo, index) => (
+              <li key={photo.id}>
+                <figure>
+                  <PhotoTile
+                    photo={photo}
+                    index={index}
+                    alt={`Foto ${index + 1} de ${place.name}`}
+                    className="aspect-square w-full rounded-2xl border-2 border-tostado"
+                    iconClassName="size-6"
+                  />
+                  {/* Crédito do autor em cada foto (exigência de atribuição do Google). */}
+                  <figcaption className="mt-1.5 text-xs text-texto-suave">
+                    Foto: {photo.authorName}
+                  </figcaption>
+                </figure>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+    </div>
+  )
 }
 
 function PlaceDetails({ place, onBack }: { place: BurgerPlace; onBack: () => void }) {
@@ -68,7 +148,8 @@ function PlaceDetails({ place, onBack }: { place: BurgerPlace; onBack: () => voi
   }
 
   return (
-    <main className="mx-auto min-h-dvh max-w-md">
+    // Celular (layout aprovado). A largura de 448px já vem do AppLayout.
+    <div className="min-h-full">
       <div className="relative h-72">
         <PhotoTile
           photo={photo}
@@ -186,7 +267,7 @@ function PlaceDetails({ place, onBack }: { place: BurgerPlace; onBack: () => voi
       <p role="status" className="sr-only">
         {announcement}
       </p>
-    </main>
+    </div>
   )
 }
 

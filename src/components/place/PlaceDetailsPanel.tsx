@@ -21,6 +21,8 @@ interface PlaceDetailsPanelProps {
    * senão o aviso some antes de ser lido. Sem ele, o painel anuncia sozinho.
    */
   onAnnounce?: (message: string) => void
+  /** Repassado ao mosaico: o que fazer no "+N fotos" (padrão: abrir os Detalhes). */
+  onShowAllPhotos?: (() => void) | undefined
 }
 
 const infoBox = 'flex flex-col gap-1 rounded-2xl border-2 border-tostado bg-superficie p-4'
@@ -34,6 +36,7 @@ export function PlaceDetailsPanel({
   place,
   titleAs: Title = 'h2',
   onAnnounce,
+  onShowAllPhotos,
 }: PlaceDetailsPanelProps) {
   const { isFavorite, toggleFavorite } = useFavorites()
   const [ownAnnouncement, setOwnAnnouncement] = useState('')
@@ -55,7 +58,7 @@ export function PlaceDetailsPanel({
 
   return (
     <article aria-labelledby={`panel-${place.placeId}`} className="flex flex-col gap-5">
-      <PhotoMosaic place={place} />
+      <PhotoMosaic place={place} onShowAllPhotos={onShowAllPhotos} />
 
       <header className="flex items-start justify-between gap-4">
         <div className="flex min-w-0 flex-col gap-2">
