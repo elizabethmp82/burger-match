@@ -1,28 +1,47 @@
 import type { Coordinates } from '@/types/location.types'
 import type { BurgerPlace } from '@/types/place.types'
-import { createBoxProjection } from '../utils/projectToBox'
+import { createBoxProjection, type BoxInsets } from '../utils/projectToBox'
 import { PlaceMarker } from './PlaceMarker'
+import { SelectedPlaceLabel } from './SelectedPlaceLabel'
+
+/** Área útil no celular/tablet: a parte de baixo fica livre para o card flutuante. */
+const DEFAULT_INSETS: BoxInsets = { top: 22, bottom: 62, left: 12, right: 88 }
 
 interface MockMapProps {
   center: Coordinates
+  /** Locais com marcador. */
   places: readonly BurgerPlace[]
+  /**
+   * Pontos que definem o enquadramento. Passe TODOS os locais da região para que
+   * os marcadores não mudem de lugar quando um filtro esconde alguns deles.
+   */
+  fitTo?: readonly Coordinates[]
   selectedId: string | undefined
   onSelect: (placeId: string) => void
+  insets?: BoxInsets
+  /** Balão com nome e nota sobre o marcador selecionado (desktop). */
+  showSelectedLabel?: boolean
 }
 
 /**
  * Mapa ILUSTRATIVO da Etapa 2: posiciona os marcadores proporcionalmente às
  * coordenadas sobre um fundo desenhado. Na Etapa 4 vira o Google Maps (BurgerMap).
  */
-export function MockMap({ center, places, selectedId, onSelect }: MockMapProps) {
-  // A parte de baixo fica livre para o card do local selecionado.
-  const project = createBoxProjection([center, ...places.map((place) => place.location)], {
-    top: 22,
-    bottom: 62,
-    left: 12,
-    right: 88,
-  })
+export function MockMap({
+  center,
+  places,
+  fitTo,
+  selectedId,
+  onSelect,
+  insets = DEFAULT_INSETS,
+  showSelectedLabel = false,
+}: MockMapProps) {
+  const project = createBoxProjection(
+    [center, ...(fitTo ?? places.map((place) => place.location))],
+    insets,
+  )
   const userPosition = project(center)
+  const selected = places.find((place) => place.placeId === selectedId)
 
   return (
     <div className="mock-map absolute inset-0" role="group" aria-label="Mapa de hamburguerias">
@@ -54,6 +73,10 @@ export function MockMap({ center, places, selectedId, onSelect }: MockMapProps) 
           onSelect={onSelect}
         />
       ))}
+
+      {showSelectedLabel && selected && (
+        <SelectedPlaceLabel place={selected} position={project(selected.location)} />
+      )}
     </div>
   )
 }

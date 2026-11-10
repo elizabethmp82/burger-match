@@ -17,6 +17,17 @@ PWA para descobrir hamburguerias próximas com uma experiência de cards no esti
 | 7     | PWA                     | ⏳           |
 | 8     | Testes e publicação     | ⏳           |
 
+## Telas por tamanho
+
+| Faixa           | Navegação              | Destaques                                                                |
+| --------------- | ---------------------- | ------------------------------------------------------------------------ |
+| Celular (< 768) | Barra inferior         | Layout dos mockups mobile                                                |
+| Tablet (768+)   | Barra lateral compacta | Conteúdo centralizado, cards com tamanho controlado                      |
+| Desktop (1024+) | Barra lateral completa | Descobrir com painel e atalhos; Mapa com lista; Boas-vindas em 2 colunas |
+| Desktop (1280+) | Barra lateral completa | Favoritos com lista + detalhe                                            |
+
+Mockups em [`docs/design/`](docs/design/) (mobile e `Desktop · *.png`).
+
 ## Requisitos
 
 - Node.js `^20.19.0 || >=22.12.0` (recomendado: LTS mais recente, ≥ 22.22)

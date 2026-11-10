@@ -120,6 +120,7 @@ Breakpoints padrão do Tailwind: celular `< md` (768px), tablet `md`, desktop `l
 - **Lista + detalhe só a partir de `xl` (1280px):** entre 1024 e 1279px o painel ficaria com ~310px, pouco para o mosaico de fotos.
 - **Container queries (`@container`)** quando o que importa é a largura do componente, não da tela: a lista de Favoritos vira 2 colunas quando ela mesma tem ≥ 42rem, e o nome em `PlaceRow` cresce quando a linha tem ≥ 24rem.
 - **Detalhes dentro do `AppLayout`:** ganha a barra lateral no tablet/desktop; no celular o layout esconde a navegação inferior nessa rota. A partir de 768px a página usa o `PlaceDetailsPanel` (o mesmo do Favoritos) + galeria completa com crédito por foto.
+- **Mapa:** no desktop, lista "Por perto" (filtros Todas / Abertas agora / Favoritas) + mapa com balão no marcador selecionado; selecionar na lista ou no mapa sincroniza os dois (RN10). O enquadramento usa todos os locais da região, para os marcadores não mudarem de lugar ao filtrar. Busca, zoom e "minha localização" do mockup entram nas Etapas 3/4, quando funcionarem.
 - **`<main>` é `relative`:** elementos `absolute` (como os avisos `sr-only`) ficam dentro da área que rola, sem criar rolagem na página inteira.
 
 ## Pontos de atenção conhecidos
