@@ -1,8 +1,11 @@
-import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo } from 'react'
+import { appendNewPlaces } from '@/services/places/osm/dedupe'
+import { describePlacesError } from '@/services/places/PlacesError'
+import { FIRST_PAGE, type SearchScope } from '@/services/places/PlacesProvider'
 import {
-  getNearbyPlaces,
-  getPlaceById,
+  getNearbyPage,
+  getPlacesByIds,
   withCurrentOpenStatus,
 } from '@/services/places/placesService'
 import type { Coordinates, SearchArea } from '@/types/location.types'
@@ -15,17 +18,39 @@ import { useSearchArea } from './useSearchArea'
  * Hooks de leitura de hamburguerias, com carregamento, erro e cache (RN12).
  *
  * Chaves de cache:
- *   ['places', 'nearby', lat, lng, raio] → busca por proximidade
- *   ['places', 'detail', id]             → um local (sem distância: ela depende de
- *                                           onde o usuário está e é calculada na hora)
+ *   ['places', 'nearby', lat, lng, raio] → busca por proximidade (em páginas)
+ *   ['places', 'detail', id]             → um local (null = não existe)
+ *   ['places', 'many', ...ids]           → vários locais (favoritos)
+ *
+ * Detalhes e Favoritos aproveitam o que a busca por proximidade já trouxe:
+ * só pedem ao serviço os locais que ainda não estão no cache.
  */
 const placeKeys = {
   nearby: ({ center, radiusKm }: SearchArea) =>
     ['places', 'nearby', center.latitude, center.longitude, radiusKm] as const,
   detail: (placeId: string) => ['places', 'detail', placeId] as const,
+  many: (placeIds: readonly string[]) => ['places', 'many', ...placeIds] as const,
 }
 
 const NO_PLACES: readonly BurgerPlace[] = []
+
+/**
+ * Arredonda para 3 casas (~100 m). Pequenas variações do GPS caem na mesma chave
+ * de cache — evita consultas repetidas — e a posição exata não sai do aparelho.
+ */
+function roundCoordinate(value: number): number {
+  return Math.round(value * 1000) / 1000
+}
+
+function roundedArea(area: SearchArea): SearchArea {
+  return {
+    ...area,
+    center: {
+      latitude: roundCoordinate(area.center.latitude),
+      longitude: roundCoordinate(area.center.longitude),
+    },
+  }
+}
 
 /** Distância até a região atual + "aberto agora" para o instante atual. */
 function present(place: BurgerPlace, origin: Coordinates, now: Date): BurgerPlace {
@@ -39,35 +64,92 @@ export interface PlacesResult {
   places: readonly BurgerPlace[]
   isPending: boolean
   isError: boolean
+  /** Explicação do erro para exibir (RN12). */
+  errorMessage: string | undefined
   retry: () => void
 }
 
-/** Hamburguerias dentro do raio atual, da mais próxima para a mais distante. */
-export function useNearbyPlaces(): PlacesResult {
+/**
+ * Carregar mais resultados — sempre por pedido da pessoa (botão), nunca sozinho.
+ * - "burger":   mais hamburguerias da mesma busca (próxima página);
+ * - "extended": busca complementar em lanchonetes e restaurantes em geral.
+ */
+export interface LoadMore {
+  scope: SearchScope
+  load: () => void
+  isLoading: boolean
+  /** Falha ao carregar mais: os locais já mostrados continuam na tela. */
+  errorMessage: string | undefined
+}
+
+export interface NearbyPlacesResult extends PlacesResult {
+  /** `undefined` quando não há mais nada para buscar. */
+  loadMore: LoadMore | undefined
+  /** Quantos locais NOVOS a última página trouxe (só depois de carregar mais). */
+  lastLoadAdded: number | undefined
+}
+
+/**
+ * Hamburguerias dentro do raio atual, da mais próxima para a mais distante.
+ * Só a 1ª página é buscada ao abrir a tela; as seguintes, só pelo `loadMore`.
+ * Mover o mapa ou passar cards não faz nenhuma consulta.
+ */
+export function useNearbyPlaces(): NearbyPlacesResult {
   const { area } = useSearchArea()
   const queryClient = useQueryClient()
   const now = useNow()
+  const searchArea = roundedArea(area)
 
-  const query = useQuery({
-    queryKey: placeKeys.nearby(area),
-    queryFn: async () => {
-      const places = await getNearbyPlaces(area)
-      // Já guarda cada local no cache de Detalhes: abrir um card não chama a API de novo.
-      for (const place of places) queryClient.setQueryData(placeKeys.detail(place.placeId), place)
-      return places
+  const query = useInfiniteQuery({
+    queryKey: placeKeys.nearby(searchArea),
+    initialPageParam: FIRST_PAGE,
+    queryFn: async ({ pageParam, signal }) => {
+      const page = await getNearbyPage(searchArea, pageParam, signal)
+      // Já guarda cada local no cache de Detalhes: abrir um card não consulta de novo.
+      for (const place of page.places) {
+        queryClient.setQueryData(placeKeys.detail(place.placeId), place)
+      }
+      return page
     },
+    getNextPageParam: (lastPage) => lastPage.next,
   })
 
-  const places = useMemo(
-    () => (query.data ?? NO_PLACES).map((place) => present(place, area.center, now)),
-    [query.data, area.center, now],
+  const pages = query.data?.pages
+  const merged = useMemo(
+    () => (pages ? appendNewPlaces(pages.map((page) => page.places)) : NO_PLACES),
+    [pages],
   )
+  const lastLoadAdded = useMemo(() => {
+    if (!pages || pages.length < 2) return undefined
+    return merged.length - appendNewPlaces(pages.slice(0, -1).map((page) => page.places)).length
+  }, [pages, merged])
+
+  const places = useMemo(
+    () => merged.map((place) => present(place, area.center, now)),
+    [merged, area.center, now],
+  )
+
+  const nextPage = pages?.at(-1)?.next
+  // Erro na 1ª página: a tela mostra o erro. Erro ao carregar mais: a lista continua.
+  const failedFirstPage = query.isError && !pages
+  const { fetchNextPage, isFetchingNextPage } = query
 
   return {
     places,
     isPending: query.isPending,
-    isError: query.isError,
+    isError: failedFirstPage,
+    errorMessage: failedFirstPage ? describePlacesError(query.error) : undefined,
     retry: () => void query.refetch(),
+    lastLoadAdded,
+    loadMore: nextPage && {
+      scope: nextPage.scope,
+      // Ignora cliques repetidos enquanto a página anterior ainda está chegando.
+      load: () => {
+        if (!isFetchingNextPage) void fetchNextPage({ cancelRefetch: false })
+      },
+      isLoading: isFetchingNextPage,
+      errorMessage: query.isFetchNextPageError ? describePlacesError(query.error) : undefined,
+    },
   }
 }
 
@@ -79,7 +161,10 @@ export function usePlace(placeId: string | undefined) {
   const query = useQuery({
     queryKey: placeKeys.detail(placeId ?? ''),
     // O cache não aceita `undefined`: "não encontrado" é guardado como null.
-    queryFn: async () => (await getPlaceById(placeId ?? '', area.center)) ?? null,
+    queryFn: async ({ signal }) => {
+      const [place] = await getPlacesByIds([placeId ?? ''], signal)
+      return place ?? null
+    },
     enabled: Boolean(placeId),
   })
 
@@ -92,34 +177,55 @@ export function usePlace(placeId: string | undefined) {
     place,
     isPending: query.isPending && Boolean(placeId),
     isError: query.isError,
+    errorMessage: query.isError ? describePlacesError(query.error) : undefined,
     retry: () => void query.refetch(),
   }
 }
 
-/** Vários locais pelos IDs (ex.: favoritos), na mesma ordem dos IDs. */
+/**
+ * Vários locais pelos IDs (ex.: favoritos), na mesma ordem dos IDs.
+ * Os que faltam no cache vêm numa ÚNICA consulta — não uma por favorito, o que
+ * esbarraria no limite de uso do serviço público.
+ */
 export function usePlacesByIds(placeIds: readonly string[]): PlacesResult {
   const { area } = useSearchArea()
+  const queryClient = useQueryClient()
   const now = useNow()
 
-  const result = useQueries({
-    queries: placeIds.map((placeId) => ({
-      queryKey: placeKeys.detail(placeId),
-      queryFn: async () => (await getPlaceById(placeId, area.center)) ?? null,
-    })),
-    combine: (results) => ({
-      data: results.flatMap((item) => (item.data ? [item.data] : [])),
-      isPending: results.some((item) => item.isPending),
-      isError: results.some((item) => item.isError),
-      retry: () => {
-        for (const item of results) if (item.isError) void item.refetch()
-      },
-    }),
+  const query = useQuery({
+    queryKey: placeKeys.many(placeIds),
+    queryFn: async ({ signal }) => {
+      const cachedPlace = (placeId: string) =>
+        queryClient.getQueryData<BurgerPlace | null>(placeKeys.detail(placeId))
+
+      const missing = placeIds.filter((placeId) => cachedPlace(placeId) === undefined)
+      if (missing.length > 0) {
+        const fetched = await getPlacesByIds(missing, signal)
+        for (const placeId of missing) {
+          const place = fetched.find((item) => item.placeId === placeId) ?? null
+          queryClient.setQueryData(placeKeys.detail(placeId), place)
+        }
+      }
+      return placeIds.flatMap((placeId) => cachedPlace(placeId) ?? [])
+    },
+    enabled: placeIds.length > 0,
+    // Ao remover um favorito, a lista anterior fica na tela até a nova (sem "piscar").
+    placeholderData: keepPreviousData,
   })
 
   const places = useMemo(
-    () => result.data.map((place) => present(place, area.center, now)),
-    [result.data, area.center, now],
+    () =>
+      placeIds.length === 0
+        ? NO_PLACES
+        : (query.data ?? NO_PLACES).map((place) => present(place, area.center, now)),
+    [placeIds.length, query.data, area.center, now],
   )
 
-  return { places, isPending: result.isPending, isError: result.isError, retry: result.retry }
+  return {
+    places,
+    isPending: query.isPending && placeIds.length > 0,
+    isError: query.isError,
+    errorMessage: query.isError ? describePlacesError(query.error) : undefined,
+    retry: () => void query.refetch(),
+  }
 }

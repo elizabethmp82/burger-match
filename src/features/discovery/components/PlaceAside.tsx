@@ -1,12 +1,12 @@
 import { Clock, MapPin, Navigation } from 'lucide-react'
+import { lazy, Suspense } from 'react'
 import { Link } from 'react-router'
 import { OpenStatus } from '@/components/place/OpenStatus'
 import { PhotoTile } from '@/components/place/PhotoTile'
 import { buttonClasses } from '@/components/ui/buttonStyles'
-import { GoogleAttribution } from '@/components/ui/GoogleAttribution'
-import { isGoogleMapsEnabled } from '@/config/env'
-import { GoogleMapView } from '@/features/map/components/GoogleMapView'
+import { DataAttribution } from '@/components/ui/DataAttribution'
 import { MiniMap } from '@/features/map/components/MiniMap'
+import { DESKTOP_QUERY, useMediaQuery } from '@/hooks/useMediaQuery'
 import { placeDetailsPath } from '@/routes/paths'
 import type { Coordinates } from '@/types/location.types'
 import type { BurgerPlace } from '@/types/place.types'
@@ -15,6 +15,8 @@ import { formatDistance } from '@/utils/formatters'
 import { directionsUrl } from '@/utils/googleMaps'
 
 const THUMBNAILS = 3
+
+const LiveMiniMap = lazy(() => import('@/features/map/components/LiveMiniMap'))
 
 interface PlaceAsideProps {
   place: BurgerPlace
@@ -31,6 +33,7 @@ export function PlaceAside({ place, origin, className }: PlaceAsideProps) {
   const photos = place.photos ?? []
   const thumbnails = photos.slice(0, THUMBNAILS)
   const hiddenPhotos = photos.length - THUMBNAILS
+  const isDesktop = useMediaQuery(DESKTOP_QUERY)
 
   return (
     <aside
@@ -116,20 +119,22 @@ export function PlaceAside({ place, origin, className }: PlaceAsideProps) {
         )}
       </div>
 
-      {isGoogleMapsEnabled ? (
-        <GoogleMapView
-          center={origin}
-          places={[place]}
-          selectedId={place.placeId}
-          interactive={false}
-          className="h-36 shrink-0 rounded-2xl border-2 border-tostado"
-        />
+      {/*
+        Desktop: minimapa real, baixado sob demanda. Enquanto carrega (e no celular,
+        onde este painel fica escondido), vale o ilustrativo — sem baixar a biblioteca à toa.
+      */}
+      {isDesktop ? (
+        <Suspense
+          fallback={<MiniMap center={origin} destination={place.location} className="h-40" />}
+        >
+          <LiveMiniMap center={origin} destination={place.location} className="h-40" />
+        </Suspense>
       ) : (
-        <MiniMap center={origin} destination={place.location} className="h-36" />
+        <MiniMap center={origin} destination={place.location} className="h-40" />
       )}
 
       <a
-        href={place.googleMapsUrl ?? directionsUrl(place.location)}
+        href={directionsUrl(place.location)}
         target="_blank"
         rel="noopener noreferrer"
         className={buttonClasses('primary', 'w-full')}
@@ -139,7 +144,7 @@ export function PlaceAside({ place, origin, className }: PlaceAsideProps) {
         <span className="sr-only"> (abre em nova aba)</span>
       </a>
 
-      <GoogleAttribution className="mt-auto" />
+      <DataAttribution className="mt-auto" />
     </aside>
   )
 }

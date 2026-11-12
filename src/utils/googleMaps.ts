@@ -1,16 +1,14 @@
 import type { Coordinates } from '@/types/location.types'
 
 /**
- * Link universal de rotas do Google Maps (abre o app no celular, se instalado).
+ * Link de rotas do Google Maps — só um LINK, sem API, sem chave e sem custo.
+ * Abre o app do Google Maps no celular (se instalado) ou o site no computador.
  * https://developers.google.com/maps/documentation/urls/get-started#directions-action
  */
-export function directionsUrl(destination: Coordinates, placeId?: string): string {
+export function directionsUrl(destination: Coordinates): string {
   const params = new URLSearchParams({
     api: '1',
     destination: `${destination.latitude},${destination.longitude}`,
   })
-  if (placeId) {
-    params.set('destination_place_id', placeId)
-  }
   return `https://www.google.com/maps/dir/?${params.toString()}`
 }

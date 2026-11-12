@@ -1,7 +1,6 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { LoaderCircle, MapPin, Search } from 'lucide-react'
 import { useId, useState, type FormEvent, type KeyboardEvent, type Ref } from 'react'
-import { isGoogleMapsEnabled } from '@/config/env'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 import {
   MIN_QUERY_LENGTH,
@@ -11,8 +10,8 @@ import {
 import type { RegionSuggestion } from '@/types/location.types'
 import { cn } from '@/utils/cn'
 
-/** Espera após a última tecla antes de consultar o Google (a lista local responde na hora). */
-const TYPING_DELAY_MS = isGoogleMapsEnabled ? 300 : 0
+/** A lista local responde na hora: sem espera entre as teclas. */
+const TYPING_DELAY_MS = 0
 
 interface RegionSearchProps {
   onSelect: (region: RegionSuggestion) => void

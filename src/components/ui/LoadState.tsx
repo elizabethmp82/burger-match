@@ -33,7 +33,8 @@ export function ErrorState({
   className,
 }: {
   onRetry: () => void
-  description?: string
+  /** `undefined` = mensagem padrão (problema de conexão). */
+  description?: string | undefined
   className?: string
 }) {
   return (

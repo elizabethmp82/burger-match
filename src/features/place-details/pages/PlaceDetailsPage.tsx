@@ -1,16 +1,17 @@
 import { ChevronLeft, Globe, Heart, MapPin, Navigation, Phone, SearchX, Share } from 'lucide-react'
-import { GoogleAttribution } from '@/components/ui/GoogleAttribution'
-import { isGoogleMapsEnabled } from '@/config/env'
 import { useRef, useState } from 'react'
 import { useParams } from 'react-router'
 import { OpenStatus } from '@/components/place/OpenStatus'
 import { PlaceDetailsPanel } from '@/components/place/PlaceDetailsPanel'
 import { PhotoCredit } from '@/components/place/PhotoCredit'
+import { BrandBand } from '@/components/place/BrandBand'
 import { PhotoTile } from '@/components/place/PhotoTile'
 import { RatingSummary } from '@/components/place/RatingSummary'
 import { buttonClasses, iconButtonClasses } from '@/components/ui/buttonStyles'
+import { DataAttribution } from '@/components/ui/DataAttribution'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { ErrorState, LoadingState } from '@/components/ui/LoadState'
+import { isDemoMode } from '@/config/env'
 import { useFavorites } from '@/features/favorites/hooks/useFavorites'
 import { useGoBack } from '@/hooks/useGoBack'
 import { TABLET_QUERY, useMediaQuery } from '@/hooks/useMediaQuery'
@@ -32,7 +33,7 @@ const secondaryAction = buttonClasses('secondary', 'flex-1 flex-col gap-1 px-2 t
  */
 export function PlaceDetailsPage() {
   const { placeId } = useParams<{ placeId: string }>()
-  const { place, isPending, isError, retry } = usePlace(placeId)
+  const { place, isPending, isError, errorMessage, retry } = usePlace(placeId)
   const goBack = useGoBack(paths.discover)
   const isTablet = useMediaQuery(TABLET_QUERY)
 
@@ -44,7 +45,7 @@ export function PlaceDetailsPage() {
         {isPending ? (
           <LoadingState label="Carregando detalhes…" className="flex-1" />
         ) : (
-          <ErrorState onRetry={retry} />
+          <ErrorState onRetry={retry} description={errorMessage} />
         )}
       </div>
     )
@@ -168,15 +169,20 @@ function PlaceDetails({ place, onBack }: { place: BurgerPlace; onBack: () => voi
   return (
     // Celular (layout aprovado). A largura de 448px já vem do AppLayout.
     <div className="min-h-full">
-      <div className="relative h-72">
-        <PhotoTile
-          photo={photo}
-          index={photoIndex}
-          alt={`Foto de ${place.name}`}
-          label={photo ? 'Foto do local' : undefined}
-          className="size-full"
-          iconClassName="size-10"
-        />
+      {/* Sem fotos: faixa da marca mais baixa, só para os botões de voltar e favoritar. */}
+      <div className={cn('relative', photos.length > 0 ? 'h-72' : 'h-36')}>
+        {photos.length > 0 ? (
+          <PhotoTile
+            photo={photo}
+            index={photoIndex}
+            alt={`Foto de ${place.name}`}
+            label={photo ? 'Foto do local' : undefined}
+            className="size-full"
+            iconClassName="size-10"
+          />
+        ) : (
+          <BrandBand className="size-full pb-6" iconClassName="size-10" />
+        )}
         <div className="absolute inset-x-0 top-0 flex justify-between p-4">
           <BackButton onClick={onBack} />
           <button
@@ -229,7 +235,7 @@ function PlaceDetails({ place, onBack }: { place: BurgerPlace; onBack: () => voi
         </div>
 
         <a
-          href={place.googleMapsUrl ?? directionsUrl(place.location)}
+          href={directionsUrl(place.location)}
           target="_blank"
           rel="noopener noreferrer"
           className={buttonClasses('primary', 'w-full')}
@@ -279,10 +285,10 @@ function PlaceDetails({ place, onBack }: { place: BurgerPlace; onBack: () => voi
           </section>
         )}
 
-        {isGoogleMapsEnabled ? (
-          <GoogleAttribution />
-        ) : (
+        {isDemoMode ? (
           <p className="text-xs text-texto-suave">Dados simulados para desenvolvimento.</p>
+        ) : (
+          <DataAttribution />
         )}
       </section>
 

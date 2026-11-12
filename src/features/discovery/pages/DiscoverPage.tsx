@@ -1,13 +1,15 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
+import { LoadMorePlaces } from '@/components/place/LoadMorePlaces'
 import { BrandIcon, Wordmark } from '@/components/ui/Brand'
-import { GoogleAttribution } from '@/components/ui/GoogleAttribution'
+import { DataAttribution } from '@/components/ui/DataAttribution'
 import { ErrorState, LoadingState } from '@/components/ui/LoadState'
 import { useFavorites } from '@/features/favorites/hooks/useFavorites'
 import { useNearbyPlaces } from '@/hooks/usePlaces'
 import { useSearchArea } from '@/hooks/useSearchArea'
 import { placeDetailsPath } from '@/routes/paths'
 import type { SearchRadiusKm } from '@/types/location.types'
+import { cn } from '@/utils/cn'
 import { AreaPill } from '../components/AreaPill'
 import { DeckEmptyState } from '../components/DeckEmptyState'
 import { PlaceAside } from '../components/PlaceAside'
@@ -91,7 +93,11 @@ export function DiscoverPage() {
         {nearby.isPending ? (
           <LoadingState className="flex-1" />
         ) : nearby.isError ? (
-          <ErrorState onRetry={nearby.retry} className="flex-1 justify-center" />
+          <ErrorState
+            onRetry={nearby.retry}
+            description={nearby.errorMessage}
+            className="flex-1 justify-center"
+          />
         ) : current ? (
           <>
             <SwipeDeck current={current} remainingCount={deck.remaining.length} />
@@ -105,7 +111,12 @@ export function DiscoverPage() {
             <p className="hidden text-center text-sm text-texto-suave lg:block">
               Use as setas do teclado: ← pular · → curtir
             </p>
-            <GoogleAttribution className="text-center lg:hidden" />
+            <DataAttribution
+              className={cn(
+                'text-center lg:hidden',
+                (current.photos?.length ?? 0) === 0 && 'max-md:mb-auto',
+              )}
+            />
           </>
         ) : (
           <DeckEmptyState
@@ -118,6 +129,11 @@ export function DiscoverPage() {
             onUndo={handleUndo}
             onExpandRadius={handleExpandRadius}
             onRestart={deck.restart}
+            loadMore={
+              nearby.loadMore && (
+                <LoadMorePlaces loadMore={nearby.loadMore} lastLoadAdded={nearby.lastLoadAdded} />
+              )
+            }
           />
         )}
 

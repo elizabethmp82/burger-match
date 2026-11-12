@@ -15,6 +15,8 @@ interface PhotoTileProps {
   /** Texto dentro do placeholder (ex.: "Foto do local"). */
   label?: string | undefined
   iconClassName?: string
+  /** Mostra "Sem foto" sob o ícone quando não há foto. Em listas, o ícone basta. */
+  showEmptyLabel?: boolean
   className?: string
 }
 
@@ -28,6 +30,7 @@ export function PhotoTile({
   alt,
   label,
   iconClassName = 'size-8',
+  showEmptyLabel = true,
   className,
 }: PhotoTileProps) {
   if (photo?.url) {
@@ -38,7 +41,7 @@ export function PhotoTile({
 
   const hasPhoto = photo !== undefined
   const Icon = hasPhoto ? ImageIcon : Hamburger
-  const text = label ?? (hasPhoto ? undefined : 'Sem foto')
+  const text = label ?? (hasPhoto || !showEmptyLabel ? undefined : 'Sem foto')
 
   return (
     <div

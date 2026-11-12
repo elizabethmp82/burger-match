@@ -6,7 +6,7 @@ import { createBoxProjection } from '../utils/projectToBox'
 interface MiniMapProps {
   center: Coordinates
   destination: Coordinates
-  className?: string
+  className?: string | undefined
 }
 
 /**

@@ -1,4 +1,5 @@
 import type { BurgerPlace } from '@/types/place.types'
+import { cn } from '@/utils/cn'
 import { BurgerCard } from './BurgerCard'
 
 interface SwipeDeckProps {
@@ -12,10 +13,17 @@ interface SwipeDeckProps {
  * Na Etapa 5 este componente recebe os gestos de swipe (Hammer.js).
  */
 export function SwipeDeck({ current, remainingCount }: SwipeDeckProps) {
-  // Celular: ocupa a altura livre (layout aprovado).
-  // Tablet+: tamanho controlado (até 400 × 544px, como no mockup), centralizado.
+  // Com foto — celular: ocupa a altura livre (layout aprovado); tablet+: até 400 × 544px.
+  // Sem foto: card mais baixo (só a faixa da marca + texto), sem espaço vazio.
+  // No celular, mt-auto (aqui) + mb-auto (na atribuição) centralizam card e botões.
+  const hasPhotos = (current.photos?.length ?? 0) > 0
   return (
-    <div className="relative mx-1 min-h-96 flex-1 md:mx-auto md:max-h-[34rem] md:w-full md:max-w-[25rem]">
+    <div
+      className={cn(
+        'relative mx-1 md:mx-auto md:w-full md:max-w-[25rem]',
+        hasPhotos ? 'min-h-96 flex-1 md:max-h-[34rem]' : 'h-[22rem] flex-none max-md:mt-auto',
+      )}
+    >
       {remainingCount > 2 && (
         <div
           aria-hidden="true"

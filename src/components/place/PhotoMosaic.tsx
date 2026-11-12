@@ -2,6 +2,7 @@ import { Link } from 'react-router'
 import { placeDetailsPath } from '@/routes/paths'
 import type { BurgerPlace } from '@/types/place.types'
 import { cn } from '@/utils/cn'
+import { BrandBand } from './BrandBand'
 import { PhotoCredit } from './PhotoCredit'
 import { PhotoTile } from './PhotoTile'
 
@@ -28,14 +29,15 @@ export function PhotoMosaic({
   /** Fotos que não aparecem nem no mosaico. */
   const notShown = photos.length - 1 - side.length
 
+  // Sem fotos: só a faixa da marca, baixa (nada de "Sem foto" ocupando espaço).
+  if (photos.length === 0) {
+    return (
+      <BrandBand className="h-28 rounded-3xl border-2 border-tostado" iconClassName="size-10" />
+    )
+  }
+
   return (
-    // Sem fotos, um bloco baixo basta: não vale ocupar 320px com "Sem foto".
-    <div
-      className={cn(
-        'grid grid-cols-3 grid-rows-2 gap-3',
-        photos.length > 0 ? 'h-72 xl:h-80' : 'h-40',
-      )}
-    >
+    <div className="grid h-72 grid-cols-3 grid-rows-2 gap-3 xl:h-80">
       <div className={cn(tile, side.length > 0 ? 'col-span-2' : 'col-span-3', 'row-span-2')}>
         <PhotoTile
           photo={main}

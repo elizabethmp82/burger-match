@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { Link } from 'react-router'
 import { buttonClasses } from '@/components/ui/buttonStyles'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { GoogleAttribution } from '@/components/ui/GoogleAttribution'
+import { DataAttribution } from '@/components/ui/DataAttribution'
 import { ErrorState, LoadingState } from '@/components/ui/LoadState'
 import { PlaceDetailsPanel } from '@/components/place/PlaceDetailsPanel'
 import { useMediaQuery, WIDE_DESKTOP_QUERY } from '@/hooks/useMediaQuery'
@@ -125,7 +125,7 @@ export function FavoritesPage() {
         ) : favorites.length === 0 && favoritesQuery.isPending ? (
           <LoadingState label="Carregando suas favoritas…" />
         ) : favorites.length === 0 && favoritesQuery.isError ? (
-          <ErrorState onRetry={favoritesQuery.retry} />
+          <ErrorState onRetry={favoritesQuery.retry} description={favoritesQuery.errorMessage} />
         ) : visible.length > 0 ? (
           // @container: as colunas dependem da largura DA LISTA, não da tela.
           // Assim a mesma lista tem 1 coluna no celular e ao lado do painel, e 2 no tablet largo.
@@ -150,7 +150,7 @@ export function FavoritesPage() {
           />
         )}
 
-        {favorites.length > 0 && <GoogleAttribution className="mt-6" />}
+        {favorites.length > 0 && <DataAttribution className="mt-6" />}
 
         <p role="status" className="sr-only">
           {announcement}

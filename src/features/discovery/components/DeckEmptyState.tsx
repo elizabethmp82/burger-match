@@ -1,5 +1,5 @@
 import { Hamburger } from 'lucide-react'
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import { buttonClasses } from '@/components/ui/buttonStyles'
 import { paths } from '@/routes/paths'
@@ -16,6 +16,8 @@ interface DeckEmptyStateProps {
   onUndo: () => void
   onExpandRadius: (radiusKm: SearchRadiusKm) => void
   onRestart: () => void
+  /** Botão "Carregar mais"/"Procurar mais lugares", quando houver mais para buscar. */
+  loadMore?: ReactNode
 }
 
 /** Fim do baralho (mockup 4) ou nenhum resultado no raio (RN12). */
@@ -27,6 +29,7 @@ export function DeckEmptyState({
   onUndo,
   onExpandRadius,
   onRestart,
+  loadMore,
 }: DeckEmptyStateProps) {
   const largerRadii = SEARCH_RADII_KM.filter((radius) => radius > radiusKm)
   const [selectedRadius, setSelectedRadius] = useState<SearchRadiusKm | undefined>(largerRadii[0])
@@ -52,6 +55,8 @@ export function DeckEmptyState({
           {summary} {largerRadii.length > 0 && 'Quer procurar mais longe?'}
         </p>
       </div>
+
+      {loadMore}
 
       {selectedRadius !== undefined ? (
         <>

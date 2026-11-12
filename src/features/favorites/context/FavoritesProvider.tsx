@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactNode } from 'react'
-import { isGoogleMapsEnabled } from '@/config/env'
+import { isDemoMode } from '@/config/env'
 import { MOCK_INITIAL_FAVORITE_IDS } from '@/mocks/places.mock'
 import { FavoritesContext, type FavoritesContextValue } from '../hooks/useFavorites'
 
@@ -10,9 +10,9 @@ import { FavoritesContext, type FavoritesContextValue } from '../hooks/useFavori
  */
 export function FavoritesProvider({ children }: { children: ReactNode }) {
   // Os favoritos de exemplo só fazem sentido com os dados simulados:
-  // seus IDs ("mock-...") não existem no Google.
+  // seus IDs ("mock-...") não existem no OpenStreetMap.
   const [favoriteIds, setFavoriteIds] = useState<readonly string[]>(
-    isGoogleMapsEnabled ? [] : MOCK_INITIAL_FAVORITE_IDS,
+    isDemoMode ? MOCK_INITIAL_FAVORITE_IDS : [],
   )
 
   const value = useMemo<FavoritesContextValue>(() => {

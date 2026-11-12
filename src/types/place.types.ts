@@ -3,9 +3,9 @@ import type { Coordinates } from './location.types'
 
 /**
  * Foto de um estabelecimento.
- * `url` fica vazia nos dados simulados: a interface mostra um placeholder.
- * Com a Places API, vem do Google e SEMPRE exibimos o crédito do autor
- * (com link para o perfil, quando houver) — exigência das políticas do Google.
+ * O OpenStreetMap não tem fotos: hoje elas só existem nos dados simulados (sem `url`,
+ * a interface mostra uma ilustração). Se um dia houver fotos licenciadas, o crédito
+ * do autor é sempre exibido.
  */
 export interface PlacePhoto {
   id: string
@@ -14,18 +14,20 @@ export interface PlacePhoto {
   url?: string
 }
 
-/** Faixa de preço de $ a $$$$, como no Google Maps. */
+/** Faixa de preço de $ a $$$$ (só nos dados simulados; o OSM não tem). */
 export type PriceLevel = 1 | 2 | 3 | 4
 
 /**
- * Hamburgueria, conforme o modelo de dados de docs/scope.md §7,
- * com os campos opcionais que as telas da Etapa 2 exibem.
- * Campos opcionais podem faltar: a interface só mostra o que existir (RN11).
+ * Hamburgueria, conforme o modelo de dados de docs/scope.md §7.
+ * Campos opcionais podem faltar — e no OpenStreetMap muitos faltam (nota, fotos,
+ * preço, às vezes endereço e horários). A interface só mostra o que existir (RN11).
  */
 export interface BurgerPlace {
+  /** No OSM: "node-123", "way-456" ou "relation-789" (seguro para usar na URL). */
   placeId: string
   name: string
-  address: string
+  /** Ausente quando o OSM não tem rua nem bairro cadastrados. */
+  address?: string
   location: Coordinates
   rating?: number
   reviewCount?: number
@@ -36,7 +38,8 @@ export interface BurgerPlace {
   nextStatusChange?: string
   /**
    * Horários da semana, já prontos para exibir, uma linha por faixa de dias
-   * (ex.: "Seg–Qui 18:00–23:00"). Equivale a `weekdayDescriptions` da Places API.
+   * (ex.: "Seg–Qui 18:00–23:00"). Se o horário do OSM não puder ser interpretado,
+   * vem o texto original, sem `openingSchedule` (e, portanto, sem "Aberto agora").
    */
   openingHours?: readonly string[]
   /**
@@ -48,6 +51,8 @@ export interface BurgerPlace {
   priceLevel?: PriceLevel
   photos?: PlacePhoto[]
   phoneNumber?: string
+  /** Sempre http(s): endereços com outros esquemas são descartados ao normalizar. */
   websiteUrl?: string
-  googleMapsUrl?: string
+  /** Página do local no OpenStreetMap (para ver a origem ou sugerir correções). */
+  osmUrl?: string
 }

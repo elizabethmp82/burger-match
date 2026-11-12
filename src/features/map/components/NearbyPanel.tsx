@@ -1,14 +1,14 @@
-import { ChevronRight, SearchX, Star } from 'lucide-react'
-import { useEffect, useRef } from 'react'
+import { ChevronRight, SearchX } from 'lucide-react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import { Link } from 'react-router'
-import { PhotoTile } from '@/components/place/PhotoTile'
+import { PlaceRow } from '@/components/place/PlaceRow'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { GoogleAttribution } from '@/components/ui/GoogleAttribution'
+import { DataAttribution } from '@/components/ui/DataAttribution'
 import { LoadingState } from '@/components/ui/LoadState'
 import { placeDetailsPath } from '@/routes/paths'
 import type { BurgerPlace } from '@/types/place.types'
 import { cn } from '@/utils/cn'
-import { formatDistance, formatRating, pluralize } from '@/utils/formatters'
+import { pluralize } from '@/utils/formatters'
 
 export type NearbyFilter = 'all' | 'open' | 'favorites'
 
@@ -29,11 +29,14 @@ interface NearbyPanelProps {
   onSelect: (placeId: string) => void
   /** Carregando: mostra o aviso em vez de "Nada por aqui". */
   isPending?: boolean
+  /** Depois da lista (ex.: botão "Carregar mais"). */
+  footer?: ReactNode
 }
 
 /**
  * Lista "Por perto" ao lado do mapa (mockup Desktop · Mapa).
- * Tocar numa linha seleciona o marcador; a seta da linha selecionada abre os Detalhes.
+ * Tocar num card seleciona o local (destaca o pino e centraliza o mapa);
+ * a seta à direita abre os Detalhes.
  */
 export function NearbyPanel({
   totalCount,
@@ -43,6 +46,7 @@ export function NearbyPanel({
   selectedId,
   onSelect,
   isPending = false,
+  footer,
 }: NearbyPanelProps) {
   const selectedRef = useRef<HTMLLIElement>(null)
 
@@ -92,101 +96,41 @@ export function NearbyPanel({
       ) : places.length === 0 ? (
         <EmptyState icon={SearchX} title="Nada por aqui" description={emptyMessage} />
       ) : (
-        <ul className="mt-4 flex flex-col gap-3">
+        <ul className="mt-4 flex flex-col gap-2.5">
           {places.map((place) => {
             const selected = place.placeId === selectedId
             return (
               <li key={place.placeId} ref={selected ? selectedRef : undefined}>
-                <NearbyRow place={place} selected={selected} onSelect={onSelect} />
+                <PlaceRow
+                  place={place}
+                  media="none"
+                  selected={selected}
+                  onSelect={() => onSelect(place.placeId)}
+                  actions={<DetailsArrow place={place} />}
+                />
               </li>
             )
           })}
         </ul>
       )}
-      <GoogleAttribution className="mt-auto pt-6" />
+      {!isPending && footer}
+      <DataAttribution className="mt-auto pt-6" />
     </section>
   )
 }
 
-function NearbyRow({
-  place,
-  selected,
-  onSelect,
-}: {
-  place: BurgerPlace
-  selected: boolean
-  onSelect: (placeId: string) => void
-}) {
-  const focusRing =
-    'focus-visible:outline-3 focus-visible:-outline-offset-4 focus-visible:outline-ketchup'
-
+/** Seta para os Detalhes: um link separado do card (que, aqui, seleciona). */
+function DetailsArrow({ place }: { place: BurgerPlace }) {
   return (
-    <article
+    <Link
+      to={placeDetailsPath(place.placeId)}
+      aria-label={`Ver detalhes de ${place.name}`}
       className={cn(
-        'flex items-stretch overflow-hidden rounded-2xl border-2 border-tostado transition-colors',
-        selected ? 'bg-mostarda/20 shadow-offset' : 'bg-superficie hover:bg-white',
+        'grid w-12 shrink-0 place-items-center border-l-2 border-tostado/15 text-tostado transition hover:bg-mostarda/30',
+        'focus-visible:outline-3 focus-visible:-outline-offset-4 focus-visible:outline-ketchup',
       )}
     >
-      <button
-        type="button"
-        onClick={() => onSelect(place.placeId)}
-        aria-current={selected ? 'true' : undefined}
-        className={cn('flex min-w-0 flex-1 items-center gap-3 p-2.5 text-left', focusRing)}
-      >
-        <PhotoTile
-          photo={place.photos?.[0]}
-          alt=""
-          className="size-14 shrink-0 rounded-xl"
-          iconClassName="size-5"
-        />
-        <span className="flex min-w-0 flex-col">
-          <span className="truncate font-bold">{place.name}</span>
-          <span className="flex flex-wrap items-center gap-x-1 text-sm text-texto-suave">
-            {place.rating !== undefined && (
-              <span className="inline-flex items-center gap-1">
-                <Star
-                  aria-hidden="true"
-                  className="size-3.5 fill-mostarda text-tostado"
-                  strokeWidth={2}
-                />
-                <span className="font-bold text-tostado">
-                  <span className="sr-only">Nota </span>
-                  {formatRating(place.rating)}
-                </span>
-              </span>
-            )}
-            {place.distanceMeters !== undefined && (
-              <span>
-                <span aria-hidden="true">· </span>
-                {formatDistance(place.distanceMeters)}
-              </span>
-            )}
-            {place.openNow !== undefined && (
-              <span
-                className={cn(
-                  'font-bold',
-                  place.openNow ? 'text-alface-forte' : 'text-ketchup-forte',
-                )}
-              >
-                <span aria-hidden="true" className="font-normal text-texto-suave">
-                  ·{' '}
-                </span>
-                {place.openNow ? 'Aberto' : 'Fechado'}
-              </span>
-            )}
-          </span>
-        </span>
-      </button>
-
-      {selected && (
-        <Link
-          to={placeDetailsPath(place.placeId)}
-          aria-label={`Ver detalhes de ${place.name}`}
-          className={cn('grid w-11 shrink-0 place-items-center hover:bg-mostarda/30', focusRing)}
-        >
-          <ChevronRight aria-hidden="true" className="size-5" strokeWidth={2.5} />
-        </Link>
-      )}
-    </article>
+      <ChevronRight aria-hidden="true" className="size-5" strokeWidth={2.5} />
+    </Link>
   )
 }

@@ -1,8 +1,8 @@
 import { Globe, Heart, Navigation, Phone, Share } from 'lucide-react'
-import { GoogleAttribution } from '@/components/ui/GoogleAttribution'
-import { isGoogleMapsEnabled } from '@/config/env'
 import { useState } from 'react'
 import { buttonClasses, iconButtonClasses } from '@/components/ui/buttonStyles'
+import { DataAttribution } from '@/components/ui/DataAttribution'
+import { isDemoMode } from '@/config/env'
 import { useFavorites } from '@/features/favorites/hooks/useFavorites'
 import { placeDetailsPath } from '@/routes/paths'
 import type { BurgerPlace } from '@/types/place.types'
@@ -130,7 +130,7 @@ export function PlaceDetailsPanel({
 
       <div className="flex flex-wrap gap-3">
         <a
-          href={place.googleMapsUrl ?? directionsUrl(place.location)}
+          href={directionsUrl(place.location)}
           target="_blank"
           rel="noopener noreferrer"
           className={buttonClasses('primary', 'px-6')}
@@ -163,10 +163,10 @@ export function PlaceDetailsPanel({
         </button>
       </div>
 
-      {isGoogleMapsEnabled ? (
-        <GoogleAttribution />
-      ) : (
+      {isDemoMode ? (
         <p className="text-xs text-texto-suave">Dados simulados para desenvolvimento.</p>
+      ) : (
+        <DataAttribution />
       )}
 
       {!onAnnounce && (
