@@ -1,4 +1,4 @@
-/** Par latitude/longitude em graus decimais (WGS 84, o mesmo do GPS e do Google Maps). */
+/** Par latitude/longitude em graus decimais (WGS 84, o mesmo do GPS e do OpenStreetMap). */
 export interface Coordinates {
   latitude: number
   longitude: number
@@ -27,8 +27,8 @@ export interface SearchArea {
 }
 
 /**
- * Sugestão da busca manual de bairro/cidade. Não traz coordenadas: no Google,
- * elas só são buscadas para a sugestão escolhida (economiza chamadas).
+ * Sugestão da busca manual de bairro/cidade. Não traz coordenadas: a tela só
+ * precisa do nome; o centro é obtido com `resolveRegion` depois da escolha.
  */
 export interface RegionSuggestion {
   id: string
@@ -38,7 +38,7 @@ export interface RegionSuggestion {
   context: string
 }
 
-/** Região da lista local (modo demonstração), já com o centro. */
+/** Região já com o centro (lista local ou resultado do Nominatim). */
 export interface Region extends RegionSuggestion {
   center: Coordinates
 }

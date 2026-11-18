@@ -71,3 +71,15 @@ export const DEFAULT_MAP_STYLE_URL = 'https://tiles.openfreemap.org/styles/liber
 export const mapConfig = {
   styleUrl: safeServiceUrl(import.meta.env.VITE_MAP_STYLE_URL, DEFAULT_MAP_STYLE_URL),
 } as const
+
+/**
+ * Busca de bairro/cidade fora da lista local (Nominatim, do OpenStreetMap).
+ * Servidor público com regras rígidas: no máximo 1 pedido por segundo, proibido
+ * autocomplete (busca a cada tecla) e crédito ao OSM obrigatório.
+ * https://operations.osmfoundation.org/policies/nominatim/
+ */
+export const DEFAULT_NOMINATIM_URL = 'https://nominatim.openstreetmap.org'
+
+export const nominatimConfig = {
+  endpoint: safeServiceUrl(import.meta.env.VITE_NOMINATIM_URL, DEFAULT_NOMINATIM_URL),
+} as const

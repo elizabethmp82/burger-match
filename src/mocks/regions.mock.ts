@@ -1,7 +1,7 @@
 /**
  * Bairros e cidades para a busca manual (Etapa 3).
  * Coordenadas reais (aproximadas ao centro de cada lugar).
- * Na Etapa 4 a busca passa a usar o Autocomplete da Places API, que cobre qualquer endereço.
+ * Fora desta lista, a pessoa pode confirmar uma busca no Nominatim (OpenStreetMap).
  */
 import type { Region } from '@/types/location.types'
 

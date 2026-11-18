@@ -8,6 +8,8 @@ interface ImportMetaEnv {
   readonly VITE_MAP_STYLE_URL?: string
   /** Servidor da Overpass API (opcional; padrão: overpass-api.de). */
   readonly VITE_OVERPASS_URL?: string
+  /** Servidor do Nominatim para a busca de bairro/cidade (opcional; padrão: o público do OSM). */
+  readonly VITE_NOMINATIM_URL?: string
 }
 
 interface ImportMeta {
