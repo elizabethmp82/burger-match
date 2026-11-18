@@ -1,70 +1,186 @@
-# BurgerMatch
+<p align="center">
+  <img src="src/assets/logos/burgermatch-logo.png" alt="BurgerMatch" width="280" />
+</p>
 
-> Encontre sua hamburgueria ideal.
+<p align="center"><strong>Encontre sua hamburgueria ideal.</strong></p>
 
-PWA para descobrir hamburguerias próximas com uma experiência de cards no estilo "swipe": direita para favoritar, esquerda para descartar.
+<p align="center">
+  PWA para descobrir hamburguerias próximas com cards no estilo <em>swipe</em>:<br />
+  direita para favoritar, esquerda para descartar.
+</p>
 
-## Status
+---
 
-| Etapa | Descrição               | Situação                                         |
-| ----- | ----------------------- | ------------------------------------------------ |
-| 1     | Configuração inicial    | ✅ Concluída                                     |
-| 2     | Interfaces (dados mock) | ✅ Concluída                                     |
-| 3     | Geolocalização          | ✅ Concluída                                     |
-| 4     | Google Maps Platform    | 🧪 Implementada, aguardando teste com chave real |
-| 5     | Swipe                   | ⏳                                               |
-| 6     | Favoritos               | ⏳                                               |
-| 7     | PWA                     | ⏳                                               |
-| 8     | Testes e publicação     | ⏳                                               |
+## Sumário
 
-## Telas por tamanho
+- [Visão geral](#visão-geral)
+- [Funcionalidades](#funcionalidades)
+- [Status do projeto](#status-do-projeto)
+- [Começando](#começando)
+- [Variáveis de ambiente](#variáveis-de-ambiente)
+- [Scripts](#scripts)
+- [Estrutura do projeto](#estrutura-do-projeto)
+- [Fontes de dados e atribuição](#fontes-de-dados-e-atribuição)
+- [Privacidade](#privacidade)
+- [Documentação](#documentação)
+- [Stack](#stack)
 
-| Faixa           | Navegação              | Destaques                                                                |
-| --------------- | ---------------------- | ------------------------------------------------------------------------ |
-| Celular (< 768) | Barra inferior         | Layout dos mockups mobile                                                |
-| Tablet (768+)   | Barra lateral compacta | Conteúdo centralizado, cards com tamanho controlado                      |
-| Desktop (1024+) | Barra lateral completa | Descobrir com painel e atalhos; Mapa com lista; Boas-vindas em 2 colunas |
-| Desktop (1280+) | Barra lateral completa | Favoritos com lista + detalhe                                            |
+## Visão geral
 
-Mockups em [`docs/design/`](docs/design/) (mobile e `Desktop · *.png`).
+O BurgerMatch mostra hamburguerias perto de você, uma de cada vez, como um baralho de cards. Você decide rápido (curtir ou pular), guarda as favoritas e vê tudo num mapa.
 
-## Requisitos
+O app é **100% front-end** (sem backend nem banco de dados) e foi pensado para ser **gratuito de manter**: usa dados abertos do OpenStreetMap, mapa do OpenFreeMap e nenhuma API com cobrança obrigatória.
 
-- Node.js `^20.19.0 || >=22.12.0` (recomendado: LTS mais recente, ≥ 22.22)
+| Celular                                                            | Desktop                                                           |
+| ------------------------------------------------------------------ | ----------------------------------------------------------------- |
+| ![Descobrir no celular](<docs/design/3. Descobrir (swipe)@1x.png>) | ![Descobrir no desktop](<docs/design/Desktop · Descobrir@1x.png>) |
+
+> Imagens dos mockups de referência. Todas as telas estão em [`docs/design/`](docs/design/).
+
+## Funcionalidades
+
+- **Boas-vindas e localização** — usa o GPS do aparelho ou uma busca manual de bairro/cidade.
+- **Descobrir** — baralho de cards com curtir, pular, desfazer e ver detalhes.
+  - Atalhos no desktop: `←` pular · `→` curtir · `↑` detalhes · `Ctrl/⌘ + Z` desfazer.
+- **Favoritos** — lista das hamburguerias curtidas (no desktop ≥ 1280 px, lista + detalhe lado a lado).
+- **Mapa** — mapa interativo (MapLibre) com as hamburguerias da região; no desktop, lista lateral sincronizada.
+- **Detalhes** — endereço, horário de funcionamento, status "aberto/fechado", distância, compartilhar e rota pelo Google Maps (apenas link, sem API).
+- **Modo demonstração** — dados simulados, sem acessar a rede, para desenvolver e testar em qualquer lugar.
+- **Layout responsivo** — celular, tablet e desktop:
+
+| Faixa              | Navegação              | Destaques                                                                |
+| ------------------ | ---------------------- | ------------------------------------------------------------------------ |
+| Celular (< 768 px) | Barra inferior         | Layout dos mockups mobile                                                |
+| Tablet (768+)      | Barra lateral compacta | Conteúdo centralizado, cards com tamanho controlado                      |
+| Desktop (1024+)    | Barra lateral completa | Descobrir com painel e atalhos; Mapa com lista; Boas-vindas em 2 colunas |
+| Desktop (1280+)    | Barra lateral completa | Favoritos com lista + detalhe                                            |
+
+## Status do projeto
+
+O desenvolvimento acontece em etapas, cada uma validada antes da próxima.
+
+| Etapa | Descrição               | Situação                                                            |
+| ----- | ----------------------- | ------------------------------------------------------------------- |
+| 1     | Configuração inicial    | ✅ Concluída                                                        |
+| 2     | Interfaces (dados mock) | ✅ Concluída                                                        |
+| 3     | Geolocalização          | ✅ Concluída                                                        |
+| 4     | Dados reais e mapa      | 🚧 Em andamento — Geoapify + OpenStreetMap e MapLibre + OpenFreeMap |
+| 5     | Swipe (gestos)          | ⏳ Planejada                                                        |
+| 6     | Favoritos persistentes  | ⏳ Planejada (localStorage)                                         |
+| 7     | PWA                     | ⏳ Planejada                                                        |
+| 8     | Testes e publicação     | ⏳ Planejada                                                        |
+
+> A Etapa 4 começou com a Google Maps Platform, mas o projeto migrou para dados abertos para não depender de faturamento obrigatório.
+
+## Começando
+
+### Requisitos
+
+- Node.js `^20.19.0 || >=22.12.0` (recomendado: LTS mais recente)
 - npm 10+
 
-## Como rodar
+### Instalação
 
 ```bash
+git clone <url-do-repositorio> burger-match
+cd burger-match
 npm install
-npm run dev        # http://localhost:5173
+cp .env.example .env.local   # depois preencha (veja abaixo)
+npm run dev                  # http://localhost:5173
 ```
 
-## Scripts
-
-| Script                 | O que faz                             |
-| ---------------------- | ------------------------------------- |
-| `npm run dev`          | Servidor de desenvolvimento com HMR   |
-| `npm run build`        | Verificação de tipos + build produção |
-| `npm run preview`      | Serve o build de `dist/` localmente   |
-| `npm run typecheck`    | Verificação de tipos (TypeScript)     |
-| `npm run lint`         | ESLint                                |
-| `npm run lint:fix`     | ESLint com correções automáticas      |
-| `npm run format`       | Formata o código com Prettier         |
-| `npm run format:check` | Verifica formatação sem alterar       |
+**Quer só ver o app funcionando?** Coloque `VITE_PLACES_PROVIDER=mock` no `.env.local`: o app roda em modo demonstração, sem chave e sem acessar a rede.
 
 ## Variáveis de ambiente
 
-Copie `.env.example` para `.env.local`. **Sem chave**, o app roda em modo demonstração (dados simulados, sem custo). Para usar dados reais do Google, siga [docs/google-maps-setup.md](docs/google-maps-setup.md).
+Configure no arquivo `.env.local` (ignorado pelo Git). O modelo completo, comentado, está em [`.env.example`](.env.example).
+
+| Variável                | Padrão                    | Descrição                                                                |
+| ----------------------- | ------------------------- | ------------------------------------------------------------------------ |
+| `VITE_PLACES_PROVIDER`  | `geoapify`                | Fonte das hamburguerias: `geoapify`, `overpass` (temporária) ou `mock`   |
+| `VITE_GEOAPIFY_API_KEY` | _(vazio)_                 | Chave da Geoapify. Sem ela, a busca avisa que não está configurada       |
+| `VITE_OVERPASS_URL`     | servidor público Overpass | Só para `overpass`. Aceita apenas `https` (ou `http` em localhost)       |
+| `VITE_NOMINATIM_URL`    | Nominatim público do OSM  | Busca de bairro/cidade fora da lista local (só após a pessoa confirmar)  |
+| `VITE_MAP_STYLE_URL`    | OpenFreeMap _liberty_     | Estilo do mapa (MapLibre). Alternativas: `.../styles/bright`, `positron` |
+| `VITE_GTM_ID`           | ID padrão do projeto      | Google Tag Manager — carregado **só** no build de produção               |
+
+### Obtendo a chave da Geoapify
+
+1. Crie uma conta gratuita (sem cartão) em <https://myprojects.geoapify.com>.
+2. Crie um projeto e copie a chave de API para `VITE_GEOAPIFY_API_KEY`.
+3. **Restrinja a chave** no painel da Geoapify, liberando só os endereços do app (ex.: `http://localhost:5173` e o domínio publicado).
+
+> ⚠️ Toda variável `VITE_*` é embutida no JavaScript do navegador, ou seja, é **pública**. Nunca coloque segredos de verdade nelas. A proteção da chave da Geoapify é a lista de domínios permitidos.
+
+> Os planos gratuitos dos serviços têm limites e podem mudar. Confira sempre as páginas oficiais antes de publicar.
+
+## Scripts
+
+| Script                 | O que faz                                |
+| ---------------------- | ---------------------------------------- |
+| `npm run dev`          | Servidor de desenvolvimento com HMR      |
+| `npm run build`        | Verificação de tipos + build de produção |
+| `npm run preview`      | Serve o build de `dist/` localmente      |
+| `npm test`             | Roda os testes uma vez (Vitest)          |
+| `npm run test:watch`   | Testes em modo observação                |
+| `npm run typecheck`    | Verificação de tipos (TypeScript)        |
+| `npm run lint`         | ESLint                                   |
+| `npm run lint:fix`     | ESLint com correções automáticas         |
+| `npm run format`       | Formata o código com Prettier            |
+| `npm run format:check` | Verifica a formatação sem alterar        |
+
+Antes de abrir um commit, o ideal é que passem: `npm run typecheck && npm run lint && npm test && npm run format:check`.
+
+## Estrutura do projeto
+
+Organização **por funcionalidade**: cada pasta em `src/features/` reúne páginas, componentes e hooks de uma área do produto. Integrações externas ficam isoladas em `src/services/`.
+
+```text
+src/
+├── components/        Componentes compartilhados (layout, place, providers, ui)
+├── features/
+│   ├── onboarding/    Boas-vindas e escolha de localização
+│   ├── discovery/     Baralho de cards (Descobrir)
+│   ├── favorites/     Favoritos
+│   ├── map/           Mapa (MapLibre) e lista de lugares próximos
+│   └── place-details/ Página de detalhes
+├── hooks/             Hooks gerais (geolocalização, busca, media query…)
+├── services/
+│   ├── places/        Interface PlacesProvider + Geoapify, Overpass e mock
+│   └── location/      GPS e busca manual de região
+├── config/            Leitura e validação das variáveis de ambiente
+├── mocks/             Dados do modo demonstração
+├── routes/            Rotas da aplicação
+├── types/             Contratos de dados
+└── utils/             Funções puras (distância, horários OSM, formatação…)
+```
+
+A fonte de dados é trocável: todas as implementações seguem a interface `PlacesProvider`, e a escolha é feita por `VITE_PLACES_PROVIDER`. Mais detalhes em [Arquitetura e decisões](docs/architecture.md).
+
+## Fontes de dados e atribuição
+
+| Serviço                                         | Uso                                            |
+| ----------------------------------------------- | ---------------------------------------------- |
+| [Geoapify Places API](https://www.geoapify.com) | Busca de hamburguerias e detalhes              |
+| [OpenStreetMap](https://www.openstreetmap.org)  | Dados dos lugares (© colaboradores OSM)        |
+| [OpenFreeMap](https://openfreemap.org)          | Estilo e tiles do mapa                         |
+| [Nominatim](https://nominatim.org)              | Busca de bairros e cidades fora da lista local |
+| [MapLibre GL JS](https://maplibre.org)          | Renderização do mapa                           |
+
+O app exibe a atribuição exigida por cada serviço. Para respeitar as políticas de uso de serviços públicos, as buscas têm cache de sessão, tempo limite e nenhuma repetição agressiva.
+
+## Privacidade
+
+- A localização **nunca é salva**: é usada só durante a sessão para buscar lugares próximos.
+- O Google Tag Manager só é incluído no build de produção — o ambiente de desenvolvimento não gera visitas nos relatórios.
 
 ## Documentação
 
 - [Escopo](docs/scope.md)
 - [Requisitos](docs/requirements.md)
 - [Arquitetura e decisões](docs/architecture.md)
-- [Configurar o Google Maps](docs/google-maps-setup.md)
 - [Mockups](docs/design/)
 
 ## Stack
 
-React 19 · TypeScript 6 · Vite 8 · Tailwind CSS 4 · React Router 8 · TanStack Query 5 · Google Maps JavaScript API + Places API (New) · Lucide React · ESLint · Prettier
+React 19 · TypeScript 6 · Vite 8 · Tailwind CSS 4 · React Router 8 · TanStack Query 5 · MapLibre GL JS · Geoapify Places API · Lucide React · Vitest · ESLint · Prettier
