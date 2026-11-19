@@ -60,16 +60,16 @@ O app é **100% front-end** (sem backend nem banco de dados) e foi pensado para 
 
 O desenvolvimento acontece em etapas, cada uma validada antes da próxima.
 
-| Etapa | Descrição               | Situação                                                                   |
-| ----- | ----------------------- | -------------------------------------------------------------------------- |
-| 1     | Configuração inicial    | ✅ Concluída                                                               |
-| 2     | Interfaces (dados mock) | ✅ Concluída                                                               |
-| 3     | Geolocalização          | ✅ Concluída                                                               |
-| 4     | Dados reais e mapa      | ✅ Concluída — Geoapify + OpenStreetMap, MapLibre + OpenFreeMap, Nominatim |
-| 5     | Swipe (gestos)          | ✅ Concluída                                                               |
-| 6     | Favoritos persistentes  | ✅ Concluída                                                               |
-| 7     | PWA                     | 🧪 Implementada, aguardando aprovação                                      |
-| 8     | Testes e publicação     | ⏳ Planejada                                                               |
+| Etapa | Descrição               | Situação                                                                    |
+| ----- | ----------------------- | --------------------------------------------------------------------------- |
+| 1     | Configuração inicial    | ✅ Concluída                                                                |
+| 2     | Interfaces (dados mock) | ✅ Concluída                                                                |
+| 3     | Geolocalização          | ✅ Concluída                                                                |
+| 4     | Dados reais e mapa      | ✅ Concluída — Geoapify + OpenStreetMap, MapLibre + OpenFreeMap, Nominatim  |
+| 5     | Swipe (gestos)          | ✅ Concluída                                                                |
+| 6     | Favoritos persistentes  | ✅ Concluída                                                                |
+| 7     | PWA                     | ✅ Concluída                                                                |
+| 8     | Testes e publicação     | 🚧 Em andamento — testes E2E (Playwright) prontos; CI e publicação a seguir |
 
 > A Etapa 4 começou com a Google Maps Platform, mas o projeto migrou para dados abertos para não depender de faturamento obrigatório.
 
@@ -126,6 +126,9 @@ Passo a passo completo (inclusive Nominatim, mapa e Overpass) em [docs/data-serv
 | `npm run preview`      | Serve o build de `dist/` localmente (é onde a PWA e o modo offline funcionam) |
 | `npm test`             | Roda os testes uma vez (Vitest)                                               |
 | `npm run test:watch`   | Testes em modo observação                                                     |
+| `npm run test:e2e`     | Testes ponta a ponta (Playwright), no build de produção em modo demonstração  |
+| `npm run test:e2e:ui`  | Testes E2E na interface visual do Playwright (ver cada passo)                 |
+| `npm run test:all`     | Testes unitários + E2E                                                        |
 | `npm run typecheck`    | Verificação de tipos (TypeScript)                                             |
 | `npm run lint`         | ESLint                                                                        |
 | `npm run lint:fix`     | ESLint com correções automáticas                                              |
@@ -133,6 +136,14 @@ Passo a passo completo (inclusive Nominatim, mapa e Overpass) em [docs/data-serv
 | `npm run format:check` | Verifica a formatação sem alterar                                             |
 
 Antes de abrir um commit, o ideal é que passem: `npm run typecheck && npm run lint && npm test && npm run format:check`.
+
+### Testes E2E (Playwright)
+
+Na primeira vez, baixe o navegador usado pelos testes: `npx playwright install chromium`.
+
+`npm run test:e2e` gera o build de produção em `dist-e2e/` no **modo demonstração** (dados simulados) e o serve na porta 4180. Os testes rodam em dois perfis, **desktop** (1280 px) e **celular** (Pixel 7), e cobrem boas-vindas e localização (GPS simulado, recusa da permissão, busca manual e raio), Descobrir (botões, arrastar, desfazer e atalhos), Favoritos (persistência, lixeira e sincronização entre abas), Detalhes, Mapa e PWA (manifest e abertura offline).
+
+Todo pedido para fora do app é bloqueado durante os testes. Assim eles não dependem da internet, não gastam créditos da Geoapify e não geram visitas no Analytics. Quando um teste falha, o relatório com captura de tela e _trace_ fica em `playwright-report/` (`npx playwright show-report`).
 
 ## Estrutura do projeto
 
@@ -156,6 +167,7 @@ src/
 ├── routes/            Rotas da aplicação
 ├── types/             Contratos de dados
 └── utils/             Funções puras (distância, horários OSM, formatação…)
+e2e/                   Testes ponta a ponta (Playwright)
 ```
 
 A fonte de dados é trocável: todas as implementações seguem a interface `PlacesProvider`, e a escolha é feita por `VITE_PLACES_PROVIDER`. Mais detalhes em [Arquitetura e decisões](docs/architecture.md).
@@ -188,4 +200,4 @@ O app exibe a atribuição exigida por cada serviço. Para respeitar as polític
 
 ## Stack
 
-React 19 · TypeScript 6 · Vite 8 · Tailwind CSS 4 · React Router 8 · TanStack Query 5 · MapLibre GL JS · Geoapify Places API · vite-plugin-pwa (Workbox) · Fontsource · Lucide React · Vitest · ESLint · Prettier
+React 19 · TypeScript 6 · Vite 8 · Tailwind CSS 4 · React Router 8 · TanStack Query 5 · MapLibre GL JS · Geoapify Places API · vite-plugin-pwa (Workbox) · Fontsource · Lucide React · Vitest · Playwright · ESLint · Prettier

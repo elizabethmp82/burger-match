@@ -31,3 +31,10 @@ dist-ssr
 # Saídas de ferramentas
 dev-dist
 coverage
+
+# Testes E2E (Playwright)
+dist-e2e
+playwright-report
+test-results
+blob-report
+playwright/.cache
