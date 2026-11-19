@@ -39,8 +39,8 @@ O app é **100% front-end** (sem backend nem banco de dados) e foi pensado para 
 
 ## Funcionalidades
 
-- **Boas-vindas e localização** — usa o GPS do aparelho ou uma busca manual de bairro/cidade.
-- **Descobrir** — baralho de cards com curtir, pular, desfazer e ver detalhes.
+- **Boas-vindas e localização** — usa o GPS do aparelho ou uma busca manual de bairro/cidade, com raio de busca de 5, 10 ou 20 km.
+- **Descobrir** — baralho de cards, do mais próximo para o mais distante. Arraste para a direita (curtir), esquerda (pular) ou para cima (detalhes); também há botões e desfazer.
   - Atalhos no desktop: `←` pular · `→` curtir · `↑` detalhes · `Ctrl/⌘ + Z` desfazer.
 - **Favoritos** — lista das hamburguerias curtidas (no desktop ≥ 1280 px, lista + detalhe lado a lado).
 - **Mapa** — mapa interativo (MapLibre) com as hamburguerias da região; no desktop, lista lateral sincronizada.
@@ -59,16 +59,16 @@ O app é **100% front-end** (sem backend nem banco de dados) e foi pensado para 
 
 O desenvolvimento acontece em etapas, cada uma validada antes da próxima.
 
-| Etapa | Descrição               | Situação                                                            |
-| ----- | ----------------------- | ------------------------------------------------------------------- |
-| 1     | Configuração inicial    | ✅ Concluída                                                        |
-| 2     | Interfaces (dados mock) | ✅ Concluída                                                        |
-| 3     | Geolocalização          | ✅ Concluída                                                        |
-| 4     | Dados reais e mapa      | 🚧 Em andamento — Geoapify + OpenStreetMap e MapLibre + OpenFreeMap |
-| 5     | Swipe (gestos)          | ⏳ Planejada                                                        |
-| 6     | Favoritos persistentes  | ⏳ Planejada (localStorage)                                         |
-| 7     | PWA                     | ⏳ Planejada                                                        |
-| 8     | Testes e publicação     | ⏳ Planejada                                                        |
+| Etapa | Descrição               | Situação                                                                   |
+| ----- | ----------------------- | -------------------------------------------------------------------------- |
+| 1     | Configuração inicial    | ✅ Concluída                                                               |
+| 2     | Interfaces (dados mock) | ✅ Concluída                                                               |
+| 3     | Geolocalização          | ✅ Concluída                                                               |
+| 4     | Dados reais e mapa      | ✅ Concluída — Geoapify + OpenStreetMap, MapLibre + OpenFreeMap, Nominatim |
+| 5     | Swipe (gestos)          | 🧪 Implementada, aguardando aprovação                                      |
+| 6     | Favoritos persistentes  | ⏳ Planejada (localStorage)                                                |
+| 7     | PWA                     | ⏳ Planejada                                                               |
+| 8     | Testes e publicação     | ⏳ Planejada                                                               |
 
 > A Etapa 4 começou com a Google Maps Platform, mas o projeto migrou para dados abertos para não depender de faturamento obrigatório.
 

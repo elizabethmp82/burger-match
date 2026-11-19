@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { LoadMorePlaces } from '@/components/place/LoadMorePlaces'
 import { BrandIcon, Wordmark } from '@/components/ui/Brand'
@@ -14,8 +14,10 @@ import { AreaPill } from '../components/AreaPill'
 import { DeckEmptyState } from '../components/DeckEmptyState'
 import { PlaceAside } from '../components/PlaceAside'
 import { SwipeActions } from '../components/SwipeActions'
+import type { SwipeableCardHandle } from '../components/SwipeableCard'
 import { SwipeDeck } from '../components/SwipeDeck'
 import { useDeckShortcuts } from '../hooks/useDeckShortcuts'
+import type { SwipeDirection } from '../utils/swipeGesture'
 import { useDiscoveryDeck } from '../hooks/useDiscoveryDeck'
 
 /**
@@ -37,17 +39,30 @@ export function DiscoverPage() {
   /** Posição do card atual na lista do raio ("3 de 12"). */
   const position = places.length - deck.remaining.length + 1
 
-  function handleLike() {
+  const cardRef = useRef<SwipeableCardHandle>(null)
+
+  /** Chamado no FIM do voo do card (gesto, botão ou tecla): aqui a ação acontece. */
+  function handleSwipe(direction: SwipeDirection) {
     if (!current) return
-    deck.like()
-    setAnnouncement(`${current.name} curtida e salva nos favoritos.`)
+    if (direction === 'right') {
+      deck.like()
+      setAnnouncement(`${current.name} curtida e salva nos favoritos.`)
+    } else if (direction === 'left') {
+      deck.skip()
+      setAnnouncement(`${current.name} pulada.`)
+    } else {
+      void navigate(placeDetailsPath(current.placeId))
+    }
   }
 
-  function handleSkip() {
-    if (!current) return
-    deck.skip()
-    setAnnouncement(`${current.name} pulada.`)
+  /** Botões e teclado: o card voa como no gesto (sem o card na tela, age direto). */
+  function flyOrAct(direction: SwipeDirection) {
+    if (cardRef.current) cardRef.current.fly(direction)
+    else handleSwipe(direction)
   }
+
+  const handleLike = () => flyOrAct('right')
+  const handleSkip = () => flyOrAct('left')
 
   function handleUndo() {
     if (!deck.canUndo) return
@@ -64,9 +79,7 @@ export function DiscoverPage() {
     onSkip: handleSkip,
     onLike: handleLike,
     onUndo: handleUndo,
-    onDetails: () => {
-      if (current) void navigate(placeDetailsPath(current.placeId))
-    },
+    onDetails: () => flyOrAct('up'),
   })
 
   return (
@@ -100,7 +113,12 @@ export function DiscoverPage() {
           />
         ) : current ? (
           <>
-            <SwipeDeck current={current} remainingCount={deck.remaining.length} />
+            <SwipeDeck
+              current={current}
+              remainingCount={deck.remaining.length}
+              onSwipe={handleSwipe}
+              cardRef={cardRef}
+            />
             <SwipeActions
               placeName={current.name}
               canUndo={deck.canUndo}

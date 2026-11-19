@@ -2,9 +2,9 @@ import { Hamburger } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import { buttonClasses } from '@/components/ui/buttonStyles'
+import { RadiusPicker } from '@/components/ui/RadiusPicker'
 import { paths } from '@/routes/paths'
 import { SEARCH_RADII_KM, type SearchRadiusKm } from '@/types/location.types'
-import { cn } from '@/utils/cn'
 import { pluralize } from '@/utils/formatters'
 
 interface DeckEmptyStateProps {
@@ -60,33 +60,12 @@ export function DeckEmptyState({
 
       {selectedRadius !== undefined ? (
         <>
-          <fieldset className="w-full">
-            <legend className="mb-2 w-full text-center text-sm font-bold">Raio de busca</legend>
-            <div className="flex gap-3">
-              {largerRadii.map((radius) => (
-                <label
-                  key={radius}
-                  className={cn(
-                    'flex-1 cursor-pointer rounded-2xl border-2 border-tostado py-3 text-center font-bold transition',
-                    'has-focus-visible:outline-3 has-focus-visible:outline-offset-2 has-focus-visible:outline-ketchup',
-                    radius === selectedRadius
-                      ? 'bg-tostado text-creme'
-                      : 'bg-superficie hover:bg-white',
-                  )}
-                >
-                  <input
-                    type="radio"
-                    name="search-radius"
-                    value={radius}
-                    checked={radius === selectedRadius}
-                    onChange={() => setSelectedRadius(radius)}
-                    className="sr-only"
-                  />
-                  {radius} km
-                </label>
-              ))}
-            </div>
-          </fieldset>
+          <RadiusPicker
+            options={largerRadii}
+            value={selectedRadius}
+            onChange={setSelectedRadius}
+            legendAlign="center"
+          />
           <button
             type="button"
             onClick={() => onExpandRadius(selectedRadius)}

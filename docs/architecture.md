@@ -157,6 +157,8 @@ Breakpoints padrão do Tailwind: celular `< md` (768px), tablet `md`, desktop `l
 - **Privacidade:** a localização fica só em memória (contexto React) — não é salva nem enviada, como a tela promete.
 - **Busca manual:** combobox acessível (padrão WAI-ARIA) sobre uma lista local de bairros e cidades, sem acentos/maiúsculas na comparação. Fora da lista, busca no Nominatim sob confirmação (ADR-018).
 - **Mocks relativos ao centro:** os locais simulados guardam distância e direção (`offset`), não coordenadas. Assim o modo demonstração funciona em qualquer cidade.
+- **Raio de busca:** escolhido na própria tela "Onde você está?" (5, 10 ou 20 km; começa em 5 km — RN04), com `RadiusPicker` (rádios nativos). Quem já tem região e só quer trocar o raio usa "Continuar em …", sem buscar a região de novo. O fim do baralho também oferece raios maiores.
+- **Ordem por distância:** a busca usa o centro arredondado (cache), mas `useNearbyPlaces` reordena tudo pela distância exibida (centro exato), sempre do mais próximo para o mais distante — inclusive o que chega por "carregar mais" (que só aparece quando o baralho acabou, então nunca passa na frente de um card já na fila).
 - **Sessão do baralho por região:** trocar de região recomeça o baralho; mudar só o raio, não. Favoritos não são afetados.
 
 ### ADR-014 — Google Maps Platform (Etapa 4) — **substituída pela ADR-015**
@@ -190,6 +192,16 @@ Primeira versão da Etapa 4: `@googlemaps/js-api-loader`, Places API (New), Auto
 - **Lista local** (`mocks/regions.mock.ts`) responde a cada tecla, sem rede.
 - **Nominatim** só é chamado quando a pessoa **confirma** (opção "Buscar em todo o mapa" ou Enter sem sugestão local): a política do servidor público proíbe autocomplete. O cliente espaça os pedidos (≥ 1,1 s), tem tempo limite de 10 s, não repete sozinho e guarda as respostas da sessão. O crédito ao OSM aparece junto dos resultados.
 - No modo demonstração a opção não aparece (sem rede). Servidor configurável por `VITE_NOMINATIM_URL`.
+
+### ADR-019 — Swipe com Pointer Events, sem biblioteca (Etapa 5)
+
+- **Por quê não Hammer.js (previsto no escopo):** sem manutenção desde 2016. Pointer Events é nativo em todos os navegadores modernos e cobre dedo, mouse e caneta com o mesmo código.
+- **Gestos:** direita = curtir (RN05), esquerda = pular (RN06), cima = abrir os Detalhes (sem decidir: o card continua no baralho). Para baixo não faz nada.
+- **Regras puras e testadas** em `features/discovery/utils/swipeGesture.ts`: vale passar de 35% da largura (lateral) ou 25% da altura (cima), ou um peteleco rápido (> 0,6 px/ms) de pelo menos 60 px. Velocidade medida nos últimos 100 ms do gesto. O eixo dominante decide.
+- **Toque continua sendo clique:** `useSwipe` só captura o ponteiro depois de 8 px de movimento; o clique que o navegador dispara ao soltar um arrasto é cancelado. O arrastar-e-soltar nativo de links/imagens é bloqueado.
+- **Visual:** o card segue o dedo e inclina até 15°; selos "Curtir"/"Pular"/"Detalhes" aparecem conforme o progresso; ao valer, o card sai da tela em 200 ms. Com `prefers-reduced-motion`, sem inclinação nem animação de saída.
+- **Botões e teclado também animam:** `SwipeableCard` expõe `fly(direção)` (via `ref`); ←/→/↑ e os botões ✕/❤ fazem o mesmo voo do gesto e a ação (curtir, pular, abrir Detalhes) só acontece no fim do voo. Toques repetidos durante o voo são ignorados (nada de curtir dois de uma vez).
+- **`touch-action: none`** no card: no celular o arrasto não rola a página. Botões e setas do teclado seguem como alternativa (acessibilidade).
 
 ## Pontos de atenção conhecidos
 

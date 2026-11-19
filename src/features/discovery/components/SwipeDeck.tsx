@@ -1,18 +1,24 @@
 import type { BurgerPlace } from '@/types/place.types'
 import { cn } from '@/utils/cn'
-import { BurgerCard } from './BurgerCard'
+import type { SwipeDirection } from '../utils/swipeGesture'
+import type { Ref } from 'react'
+import { SwipeableCard, type SwipeableCardHandle } from './SwipeableCard'
 
 interface SwipeDeckProps {
   current: BurgerPlace
   /** Quantos cards ainda restam (incluindo o atual): define as camadas de fundo. */
   remainingCount: number
+  /** Gesto concluído: direita = curtir, esquerda = pular, cima = Detalhes. */
+  onSwipe: (direction: SwipeDirection) => void
+  /** Para os botões e o teclado animarem o card do topo. */
+  cardRef?: Ref<SwipeableCardHandle> | undefined
 }
 
 /**
  * Pilha de cards. As camadas de trás são decorativas e mostram que há mais cards.
- * Na Etapa 5 este componente recebe os gestos de swipe (Hammer.js).
+ * O card do topo pode ser arrastado (SwipeableCard, Pointer Events).
  */
-export function SwipeDeck({ current, remainingCount }: SwipeDeckProps) {
+export function SwipeDeck({ current, remainingCount, onSwipe, cardRef }: SwipeDeckProps) {
   // Com foto — celular: ocupa a altura livre (layout aprovado); tablet+: até 400 × 544px.
   // Sem foto: card mais baixo (só a faixa da marca + texto), sem espaço vazio.
   // No celular, mt-auto (aqui) + mb-auto (na atribuição) centralizam card e botões.
@@ -36,7 +42,7 @@ export function SwipeDeck({ current, remainingCount }: SwipeDeckProps) {
           className="absolute inset-0 translate-y-1 rotate-2 rounded-3xl border-2 border-tostado bg-superficie"
         />
       )}
-      <BurgerCard key={current.placeId} place={current} />
+      <SwipeableCard key={current.placeId} ref={cardRef} place={current} onSwipe={onSwipe} />
     </div>
   )
 }

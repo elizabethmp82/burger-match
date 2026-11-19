@@ -87,7 +87,7 @@ A identidade oficial utiliza um logotipo de hambúrguer em um card com coração
 | CSS          | Tailwind CSS v4              | Design responsivo                                  |
 | Navegação    | React Router                 | Rotas SPA                                          |
 | Ícones       | Lucide React                 | Ícones consistentes                                |
-| Gestos       | Hammer.js                    | Swipes, com integração isolada em componente React |
+| Gestos       | Pointer Events (nativo)      | Swipes, com integração isolada em componente React |
 | Mapas        | MapLibre GL JS + OpenFreeMap | Mapa interativo                                    |
 | Busca        | Geoapify Places API          | Pesquisa de estabelecimentos (dados OSM)           |
 | Regiões      | Nominatim                    | Bairros e cidades fora da lista local              |
