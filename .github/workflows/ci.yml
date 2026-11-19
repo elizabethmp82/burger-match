@@ -1,0 +1,74 @@
+# Integração contínua: a cada push na main e a cada pull request, o GitHub
+# confere o projeto num Linux limpo (o mesmo tipo de máquina que a Vercel usa).
+# Gratuito para repositórios públicos. Resultado: aba "Actions" do repositório.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  # Botão "Run workflow" na aba Actions, para rodar à mão.
+  workflow_dispatch:
+
+# Um push novo cancela a verificação antiga do mesmo branch (economiza minutos).
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# Só leitura do código: o workflow não altera nada no repositório.
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: 24
+
+jobs:
+  qualidade:
+    name: Formatação, lint, tipos, testes e build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      # npm ci: instala exatamente o que está no package-lock.json.
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      # Sem chave da Geoapify: o build é o mesmo (a chave só é usada em tempo de execução).
+      - run: npm run build
+
+  e2e:
+    name: Testes E2E (Playwright)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - run: npm ci
+
+      # Chromium + bibliotecas do sistema que ele precisa no Linux.
+      - run: npx playwright install --with-deps chromium
+
+      # Build de produção em modo demonstração + testes (veja playwright.config.ts).
+      - run: npm run test:e2e
+
+      # Se algo falhar, o relatório (capturas de tela e trace) fica para download
+      # na página da execução, em "Artifacts", por 14 dias.
+      - uses: actions/upload-artifact@v4
+        if: ${{ failure() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14

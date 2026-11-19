@@ -9,6 +9,10 @@
   direita para favoritar, esquerda para descartar.
 </p>
 
+<p align="center">
+  <a href="https://github.com/elizabethmp82/burger-match/actions/workflows/ci.yml"><img src="https://github.com/elizabethmp82/burger-match/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI" /></a>
+</p>
+
 ---
 
 ## Sumário
@@ -60,16 +64,16 @@ O app é **100% front-end** (sem backend nem banco de dados) e foi pensado para 
 
 O desenvolvimento acontece em etapas, cada uma validada antes da próxima.
 
-| Etapa | Descrição               | Situação                                                                    |
-| ----- | ----------------------- | --------------------------------------------------------------------------- |
-| 1     | Configuração inicial    | ✅ Concluída                                                                |
-| 2     | Interfaces (dados mock) | ✅ Concluída                                                                |
-| 3     | Geolocalização          | ✅ Concluída                                                                |
-| 4     | Dados reais e mapa      | ✅ Concluída — Geoapify + OpenStreetMap, MapLibre + OpenFreeMap, Nominatim  |
-| 5     | Swipe (gestos)          | ✅ Concluída                                                                |
-| 6     | Favoritos persistentes  | ✅ Concluída                                                                |
-| 7     | PWA                     | ✅ Concluída                                                                |
-| 8     | Testes e publicação     | 🚧 Em andamento — testes E2E (Playwright) prontos; CI e publicação a seguir |
+| Etapa | Descrição               | Situação                                                                   |
+| ----- | ----------------------- | -------------------------------------------------------------------------- |
+| 1     | Configuração inicial    | ✅ Concluída                                                               |
+| 2     | Interfaces (dados mock) | ✅ Concluída                                                               |
+| 3     | Geolocalização          | ✅ Concluída                                                               |
+| 4     | Dados reais e mapa      | ✅ Concluída — Geoapify + OpenStreetMap, MapLibre + OpenFreeMap, Nominatim |
+| 5     | Swipe (gestos)          | ✅ Concluída                                                               |
+| 6     | Favoritos persistentes  | ✅ Concluída                                                               |
+| 7     | PWA                     | ✅ Concluída                                                               |
+| 8     | Testes e publicação     | 🚧 Em andamento — testes E2E e CI prontos; publicação a seguir             |
 
 > A Etapa 4 começou com a Google Maps Platform, mas o projeto migrou para dados abertos para não depender de faturamento obrigatório.
 
@@ -144,6 +148,10 @@ Na primeira vez, baixe o navegador usado pelos testes: `npx playwright install c
 `npm run test:e2e` gera o build de produção em `dist-e2e/` no **modo demonstração** (dados simulados) e o serve na porta 4180. Os testes rodam em dois perfis, **desktop** (1280 px) e **celular** (Pixel 7), e cobrem boas-vindas e localização (GPS simulado, recusa da permissão, busca manual e raio), Descobrir (botões, arrastar, desfazer e atalhos), Favoritos (persistência, lixeira e sincronização entre abas), Detalhes, Mapa e PWA (manifest e abertura offline).
 
 Todo pedido para fora do app é bloqueado durante os testes. Assim eles não dependem da internet, não gastam créditos da Geoapify e não geram visitas no Analytics. Quando um teste falha, o relatório com captura de tela e _trace_ fica em `playwright-report/` (`npx playwright show-report`).
+
+### Integração contínua (GitHub Actions)
+
+A cada push na `main` e a cada pull request, o workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) roda num Linux limpo: formatação, lint, tipos, testes unitários e build, e, em paralelo, os testes E2E. O resultado aparece na aba **Actions** do repositório e no selo acima. Se os testes E2E falharem, o relatório do Playwright fica disponível para download na página da execução, em **Artifacts**.
 
 ## Estrutura do projeto
 
