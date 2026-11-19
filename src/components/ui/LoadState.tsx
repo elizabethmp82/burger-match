@@ -1,9 +1,13 @@
-import { LoaderCircle, WifiOff } from 'lucide-react'
+import { WifiOff } from 'lucide-react'
 import { cn } from '@/utils/cn'
+import { AnimatedBrandIcon } from './Brand'
 import { buttonClasses } from './buttonStyles'
 import { EmptyState } from './EmptyState'
 
-/** Carregando (RN12). role="status": o leitor de tela anuncia sem roubar o foco. */
+/**
+ * Carregando (RN12): ícone da marca animado + texto.
+ * role="status": o leitor de tela anuncia sem roubar o foco.
+ */
 export function LoadingState({
   label = 'Buscando hamburguerias…',
   className,
@@ -16,11 +20,7 @@ export function LoadingState({
       role="status"
       className={cn('flex flex-col items-center justify-center gap-3 py-16 text-center', className)}
     >
-      <LoaderCircle
-        aria-hidden="true"
-        className="size-10 animate-spin text-ketchup-forte motion-reduce:animate-none"
-        strokeWidth={2.5}
-      />
+      <AnimatedBrandIcon className="size-24" />
       <p className="font-semibold text-texto-suave">{label}</p>
     </div>
   )

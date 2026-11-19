@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-hidden="true">
+  <!--
+    Ícone do BurgerMatch, animado: usado enquanto o app carrega ou busca algo.
+    Vetorial e com CSS próprio: funciona como <img> e no index.html (antes do JavaScript).
+    A animação imita um "match": a carta desliza para a direita, o coração pulsa
+    e o hambúrguer quica. Com "reduzir movimento" ligado, o ícone fica parado.
+  -->
+  <style>
+    .linha { stroke: #2b1a12; stroke-width: 22; stroke-linejoin: round; stroke-linecap: round; }
+    .carta-tras, .carta-frente, .hamburguer, .coracao { transform-origin: 512px 540px; }
+    .coracao { transform-origin: 778px 236px; }
+    .carta-tras { animation: tras 1.6s ease-in-out infinite; }
+    .carta-frente { animation: swipe 1.6s cubic-bezier(.45, 0, .25, 1) infinite; }
+    .hamburguer { animation: quica 1.6s ease-in-out infinite; }
+    .coracao { animation: pulsa 1.6s ease-in-out infinite; }
+    @keyframes swipe {
+      0%, 100% { transform: rotate(0deg) translateX(0); }
+      45% { transform: rotate(7deg) translateX(34px); }
+      60% { transform: rotate(7deg) translateX(34px); }
+    }
+    @keyframes tras {
+      0%, 100% { transform: rotate(0deg); }
+      45%, 60% { transform: rotate(-4deg); }
+    }
+    @keyframes quica {
+      0%, 30%, 100% { transform: translateY(0); }
+      45% { transform: translateY(-14px); }
+      58% { transform: translateY(0); }
+    }
+    @keyframes pulsa {
+      0%, 40%, 100% { transform: scale(1); }
+      52% { transform: scale(1.22); }
+      64% { transform: scale(0.96); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .carta-tras, .carta-frente, .hamburguer, .coracao { animation: none; }
+    }
+  </style>
+
+  <!-- Carta de trás (mostarda) -->
+  <g class="carta-tras">
+    <rect class="linha" x="245" y="185" width="530" height="700" rx="62" fill="#ffb627"
+      transform="rotate(-12 510 535)" />
+  </g>
+
+  <!-- Carta da frente com o hambúrguer -->
+  <g class="carta-frente">
+    <rect class="linha" x="262" y="190" width="500" height="670" rx="62" fill="#fff9f0"
+      transform="rotate(7 512 525)" />
+
+    <g transform="rotate(7 512 545)">
+      <g class="hamburguer">
+        <!-- Pão de cima e gergelim -->
+        <path class="linha" fill="#f29e38"
+          d="M352 500 C352 405 425 340 517 340 C610 340 683 405 683 500 Z" />
+        <g fill="#fff9f0">
+          <ellipse cx="455" cy="405" rx="17" ry="10" transform="rotate(-15 455 405)" />
+          <ellipse cx="532" cy="388" rx="17" ry="10" />
+          <ellipse cx="594" cy="425" rx="17" ry="10" transform="rotate(20 594 425)" />
+          <ellipse cx="497" cy="447" rx="17" ry="10" />
+        </g>
+        <!-- Alface -->
+        <path d="M326 515 q32 -26 64 0 t64 0 t64 0 t64 0 t64 0 t60 0" fill="none"
+          stroke="#3fa65a" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" />
+        <!-- Carne -->
+        <rect class="linha" x="333" y="540" width="356" height="82" rx="41" fill="#6b3a22" />
+        <!-- Queijo -->
+        <path class="linha" fill="#ffc93c"
+          d="M352 545 L670 545 L640 575 L600 552 L555 595 L505 552 L455 590 L410 552 Z" />
+        <!-- Pão de baixo -->
+        <path class="linha" fill="#f29e38"
+          d="M336 642 L688 642 L688 668 C688 712 660 738 615 738 L410 738 C365 738 336 712 336 668 Z" />
+      </g>
+    </g>
+  </g>
+
+  <!-- Selo do coração -->
+  <g class="coracao">
+    <circle class="linha" cx="778" cy="236" r="118" fill="#e63b2e" />
+    <path fill="#fff9f0"
+      d="M778 296 C735 262 725 238 725 218 C725 196 742 182 760 182 C770 182 776 188 778 196 C780 188 786 182 796 182 C814 182 831 196 831 218 C831 238 821 262 778 296 Z" />
+  </g>
+</svg>

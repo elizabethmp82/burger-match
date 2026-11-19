@@ -26,8 +26,9 @@ export function SideNavigation() {
 
   return (
     <aside className="hidden w-24 shrink-0 flex-col gap-6 overflow-y-auto border-r-2 border-tostado bg-superficie px-3 py-6 md:flex lg:w-64 lg:px-5">
+      {/* Logo: volta para a página inicial (Boas-vindas). */}
       <Link
-        to={paths.discover}
+        to={paths.welcome}
         className={cn(
           'flex items-center justify-center gap-2 rounded-xl lg:justify-start',
           focusRing,
@@ -37,6 +38,7 @@ export function SideNavigation() {
         <span className="sr-only text-2xl lg:not-sr-only">
           <Wordmark />
         </span>
+        <span className="sr-only"> — página inicial</span>
       </Link>
 
       {/* Região de busca: leva à tela "Onde você está?" para trocar. */}

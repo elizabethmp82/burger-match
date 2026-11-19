@@ -1,4 +1,4 @@
-import { LoaderCircle } from 'lucide-react'
+import { AnimatedBrandIcon } from '@/components/ui/Brand'
 import { buttonClasses } from '@/components/ui/buttonStyles'
 import type { LoadMore } from '@/hooks/usePlaces'
 import { cn } from '@/utils/cn'
@@ -26,9 +26,7 @@ export function LoadMorePlaces({ loadMore, lastLoadAdded, className }: LoadMoreP
         aria-busy={loadMore.isLoading}
         className={buttonClasses('secondary', 'w-full')}
       >
-        {loadMore.isLoading && (
-          <LoaderCircle aria-hidden="true" className="size-4 animate-spin" strokeWidth={2.5} />
-        )}
+        {loadMore.isLoading && <AnimatedBrandIcon className="size-6" />}
         {loadMore.isLoading
           ? 'Procurando…'
           : isExtended

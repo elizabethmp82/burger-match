@@ -13,7 +13,33 @@
     <title>BurgerMatch</title>
   </head>
   <body>
-    <div id="root"></div>
+    <!--
+      Enquanto o JavaScript carrega, aparece o ícone animado (o SVG traz a própria
+      animação em CSS). O React substitui este conteúdo assim que o app abre.
+    -->
+    <div id="root">
+      <div
+        role="status"
+        style="min-height: 100dvh; display: grid; place-items: center; background: #fff4e0"
+      >
+        <img
+          src="/src/assets/logos/burgermatch-icone-animado.svg"
+          alt=""
+          width="112"
+          height="112"
+        />
+        <span
+          style="
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            clip-path: inset(50%);
+          "
+          >Carregando o BurgerMatch…</span
+        >
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -39,6 +39,15 @@
 
   /* Sombra "deslocada" dos cards e botões nos mockups */
   --shadow-offset: 0 4px 0 0 var(--color-tostado);
+
+  /* Órbita das bolinhas da ilustração da marca (BrandIllustration): 1 volta lenta */
+  --animate-orbit: orbit 24s linear infinite;
+
+  @keyframes orbit {
+    to {
+      transform: rotate(360deg);
+    }
+  }
 }
 
 @layer base {

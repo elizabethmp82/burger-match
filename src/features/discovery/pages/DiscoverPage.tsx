@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { useNavigate } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import { LoadMorePlaces } from '@/components/place/LoadMorePlaces'
 import { BrandIcon, Wordmark } from '@/components/ui/Brand'
 import { DataAttribution } from '@/components/ui/DataAttribution'
@@ -7,7 +7,7 @@ import { ErrorState, LoadingState } from '@/components/ui/LoadState'
 import { useFavorites } from '@/features/favorites/hooks/useFavorites'
 import { useNearbyPlaces } from '@/hooks/usePlaces'
 import { useSearchArea } from '@/hooks/useSearchArea'
-import { placeDetailsPath } from '@/routes/paths'
+import { paths, placeDetailsPath } from '@/routes/paths'
 import type { SearchRadiusKm } from '@/types/location.types'
 import { cn } from '@/utils/cn'
 import { AreaPill } from '../components/AreaPill'
@@ -87,8 +87,15 @@ export function DiscoverPage() {
       <div className="page-container flex flex-1 flex-col gap-4 pt-6 pb-4 md:justify-center md:py-8 lg:overflow-y-auto">
         {/* Celular: logo no topo. Tablet+: o logo e a região ficam na barra lateral. */}
         <header className="flex items-center gap-2 md:hidden">
-          <BrandIcon className="size-9" />
-          <Wordmark className="text-2xl" />
+          {/* Logo: volta para a página inicial (Boas-vindas). */}
+          <Link
+            to={paths.welcome}
+            className="flex items-center gap-2 rounded-xl focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-ketchup"
+          >
+            <BrandIcon className="size-9" />
+            <Wordmark className="text-2xl" />
+            <span className="sr-only"> — página inicial</span>
+          </Link>
         </header>
 
         {/* "contents" faz a linha não existir no celular (sem espaço extra). */}

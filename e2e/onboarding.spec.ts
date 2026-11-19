@@ -49,6 +49,16 @@ test.describe('Boas-vindas e localização', () => {
     await expect(page).toHaveURL(/\/map$/)
   })
 
+  test('clicar no logo volta para a página inicial', async ({ page }) => {
+    await startWithMyLocation(page)
+
+    // Celular: logo no topo do Descobrir. Tablet/desktop: logo na barra lateral.
+    await page.getByRole('link', { name: /página inicial/ }).click()
+
+    await expect(page).toHaveURL(/\/$/)
+    await expect(page.getByRole('link', { name: 'Começar agora' })).toBeVisible()
+  })
+
   test('endereço desconhecido volta para as Boas-vindas', async ({ page }) => {
     await page.goto('/pagina-que-nao-existe')
 

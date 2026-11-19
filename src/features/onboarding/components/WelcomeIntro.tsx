@@ -1,6 +1,6 @@
 import { Heart, Layers2, MapPin, type LucideIcon } from 'lucide-react'
 import { Link } from 'react-router'
-import { BrandIcon, Wordmark } from '@/components/ui/Brand'
+import { AnimatedBrandIcon, Wordmark } from '@/components/ui/Brand'
 import { buttonClasses } from '@/components/ui/buttonStyles'
 import { locationStepPath } from '@/routes/paths'
 import { cn } from '@/utils/cn'
@@ -43,7 +43,7 @@ export function WelcomeIntro() {
       <div className="flex flex-1 flex-col md:flex-none">
         <header className="flex flex-col items-center gap-3 text-center lg:items-start lg:text-left">
           {/* No desktop o ícone aparece grande na ilustração ao lado. */}
-          <BrandIcon className="size-32 lg:hidden" />
+          <AnimatedBrandIcon className="size-32 lg:hidden" />
           <h1 className="text-5xl lg:text-6xl">
             <Wordmark />
           </h1>
@@ -82,7 +82,7 @@ export function WelcomeIntro() {
       </div>
 
       <BrandIllustration className="hidden w-full max-w-lg justify-self-center lg:block">
-        <BrandIcon className="w-[72%]" />
+        <AnimatedBrandIcon className="w-[72%]" />
       </BrandIllustration>
     </main>
   )

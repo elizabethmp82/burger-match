@@ -1,6 +1,7 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
-import { Globe, LoaderCircle, MapPin, Search } from 'lucide-react'
+import { Globe, MapPin, Search } from 'lucide-react'
 import { useId, useState, type FormEvent, type KeyboardEvent, type Ref } from 'react'
+import { AnimatedBrandIcon } from '@/components/ui/Brand'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 import {
   canSearchOnline,
@@ -169,8 +170,6 @@ export function RegionSearch({ onSelect, busy = false, inputRef }: RegionSearchP
                     : 'Nenhum lugar encontrado.'
                   : `${suggestions.length} ${suggestions.length === 1 ? 'sugestão' : 'sugestões'}. Use as setas para escolher.`
 
-  const SearchIcon = searching || busy ? LoaderCircle : Search
-
   return (
     <form role="search" onSubmit={handleSubmit} className="flex flex-col gap-2">
       <label htmlFor={inputId} className="text-sm font-bold">
@@ -179,13 +178,12 @@ export function RegionSearch({ onSelect, busy = false, inputRef }: RegionSearchP
 
       <div className="relative">
         <div className="flex items-center gap-3 rounded-2xl border-2 border-tostado bg-superficie px-4 focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-ketchup">
-          <SearchIcon
-            aria-hidden="true"
-            className={cn(
-              'size-5 shrink-0 text-texto-suave',
-              (searching || busy) && 'animate-spin motion-reduce:animate-none',
-            )}
-          />
+          {/* Buscando: a lupa vira o ícone da marca animado. */}
+          {searching || busy ? (
+            <AnimatedBrandIcon className="-mx-0.5 size-6" />
+          ) : (
+            <Search aria-hidden="true" className="size-5 shrink-0 text-texto-suave" />
+          )}
           <input
             ref={inputRef}
             id={inputId}

@@ -1,7 +1,8 @@
-import { ChevronLeft, Hamburger, LoaderCircle, Navigation, TriangleAlert } from 'lucide-react'
+import { ChevronLeft, Hamburger, Navigation, TriangleAlert } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 import type { LocationRedirectState } from '@/components/layout/RequireLocation'
+import { AnimatedBrandIcon } from '@/components/ui/Brand'
 import { buttonClasses, iconButtonClasses } from '@/components/ui/buttonStyles'
 import { MapPinShape } from '@/components/ui/MapPinShape'
 import { RadiusPicker } from '@/components/ui/RadiusPicker'
@@ -111,7 +112,7 @@ export function LocationStep() {
             className={buttonClasses('primary', cn('mt-8 w-full', locating && 'cursor-progress'))}
           >
             {locating ? (
-              <LoaderCircle aria-hidden="true" className="size-5 animate-spin" strokeWidth={2.5} />
+              <AnimatedBrandIcon className="size-7" />
             ) : (
               <Navigation aria-hidden="true" className="size-5" strokeWidth={2.5} />
             )}
