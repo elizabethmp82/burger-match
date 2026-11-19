@@ -41,3 +41,18 @@ export function offsetCoordinates(
     longitude: origin.longitude + (distanceKm * Math.sin(bearing)) / kmPerDegreeLng,
   }
 }
+
+/**
+ * Do mais próximo para o mais distante, pela distância já calculada (`distanceMeters`).
+ * Devolve uma lista nova (não altera a original). Sem distância vai para o fim.
+ * Empates mantêm a ordem original (o sort do JavaScript é estável).
+ */
+export function sortByDistance<T extends { distanceMeters?: number | undefined }>(
+  items: readonly T[],
+): T[] {
+  return [...items].sort(
+    (a, b) =>
+      (a.distanceMeters ?? Number.POSITIVE_INFINITY) -
+      (b.distanceMeters ?? Number.POSITIVE_INFINITY),
+  )
+}

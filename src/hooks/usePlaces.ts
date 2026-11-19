@@ -10,7 +10,7 @@ import {
 } from '@/services/places/placesService'
 import type { Coordinates, SearchArea } from '@/types/location.types'
 import type { BurgerPlace } from '@/types/place.types'
-import { distanceInMeters } from '@/utils/distance'
+import { distanceInMeters, sortByDistance } from '@/utils/distance'
 import { useNow } from './useNow'
 import { useSearchArea } from './useSearchArea'
 
@@ -124,8 +124,11 @@ export function useNearbyPlaces(): NearbyPlacesResult {
     return merged.length - appendNewPlaces(pages.slice(0, -1).map((page) => page.places)).length
   }, [pages, merged])
 
+  // A distância exibida é a do centro EXATO da região (a busca usa o centro arredondado),
+  // então a ordem final é refeita aqui: sempre do mais próximo para o mais distante,
+  // incluindo os locais de "carregar mais".
   const places = useMemo(
-    () => merged.map((place) => present(place, area.center, now)),
+    () => sortByDistance(merged.map((place) => present(place, area.center, now))),
     [merged, area.center, now],
   )
 
