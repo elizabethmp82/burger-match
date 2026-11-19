@@ -2,7 +2,7 @@
  * Cálculo de "aberto agora" a partir da grade semanal de horários.
  * Função pura (sem chamadas externas): fácil de testar na Etapa 8.
  *
- * Formato igual ao da Places API: dias de 0 (domingo) a 6 (sábado), horário local
+ * Formato: dias de 0 (domingo) a 6 (sábado), horário local
  * do estabelecimento. Um período sem `close` significa aberto 24 horas.
  */
 

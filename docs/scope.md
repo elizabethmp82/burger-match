@@ -1,8 +1,10 @@
 # BurgerMatch — Documento de Escopo do Projeto
 
-**Versão:** 1.0  
-**Data:** 10/11/2026  
-**Status:** Planejamento inicial
+**Versão:** 1.1  
+**Data:** 10/11/2026 (revisado em 18/11/2026)  
+**Status:** Em desenvolvimento
+
+> **Revisão 1.1 — dados abertos no lugar do Google.** Para o app continuar gratuito (sem conta de faturamento obrigatória), a Google Maps Platform foi substituída por dados do OpenStreetMap (Geoapify Places API, Nominatim) e mapa com MapLibre GL JS + OpenFreeMap. Do Google ficou só o _link_ de rotas, sem API. Decisões em [architecture.md](architecture.md) (ADR-014 a ADR-018); configuração em [data-services.md](data-services.md).
 
 ## 1. Visão geral
 
@@ -14,7 +16,7 @@
 | Arquitetura    | SPA — Single Page Application                   |
 | Frontend       | React + TypeScript                              |
 | Estilização    | Tailwind CSS                                    |
-| Integração     | Google Maps Platform                            |
+| Integração     | OpenStreetMap (Geoapify, Nominatim)             |
 | Banco de dados | Não utilizado no MVP                            |
 | Autenticação   | Não necessária                                  |
 | Armazenamento  | localStorage                                    |
@@ -77,25 +79,26 @@ A identidade oficial utiliza um logotipo de hambúrguer em um card com coração
 
 ## 4. Tecnologias
 
-| Categoria    | Tecnologia                 | Finalidade                                         |
-| ------------ | -------------------------- | -------------------------------------------------- |
-| Linguagem    | TypeScript                 | Tipagem estática                                   |
-| UI           | React                      | Componentes e gerenciamento de estado              |
-| Build        | Vite                       | Ambiente e compilação                              |
-| CSS          | Tailwind CSS v4            | Design responsivo                                  |
-| Navegação    | React Router               | Rotas SPA                                          |
-| Ícones       | Lucide React               | Ícones consistentes                                |
-| Gestos       | Hammer.js                  | Swipes, com integração isolada em componente React |
-| Mapas        | Google Maps JavaScript API | Mapa interativo                                    |
-| Busca        | Places Library (New)       | Pesquisa de estabelecimentos                       |
-| Localização  | Geolocation API            | Latitude e longitude                               |
-| Persistência | localStorage               | IDs dos favoritos e preferências                   |
-| PWA          | vite-plugin-pwa            | Manifest, service worker e cache                   |
-| Testes       | Vitest + Testing Library   | Testes unitários e de componentes                  |
-| E2E          | Playwright                 | Testes de fluxos                                   |
-| Qualidade    | ESLint + Prettier          | Padronização                                       |
+| Categoria    | Tecnologia                   | Finalidade                                         |
+| ------------ | ---------------------------- | -------------------------------------------------- |
+| Linguagem    | TypeScript                   | Tipagem estática                                   |
+| UI           | React                        | Componentes e gerenciamento de estado              |
+| Build        | Vite                         | Ambiente e compilação                              |
+| CSS          | Tailwind CSS v4              | Design responsivo                                  |
+| Navegação    | React Router                 | Rotas SPA                                          |
+| Ícones       | Lucide React                 | Ícones consistentes                                |
+| Gestos       | Hammer.js                    | Swipes, com integração isolada em componente React |
+| Mapas        | MapLibre GL JS + OpenFreeMap | Mapa interativo                                    |
+| Busca        | Geoapify Places API          | Pesquisa de estabelecimentos (dados OSM)           |
+| Regiões      | Nominatim                    | Bairros e cidades fora da lista local              |
+| Localização  | Geolocation API              | Latitude e longitude                               |
+| Persistência | localStorage                 | IDs dos favoritos e preferências                   |
+| PWA          | vite-plugin-pwa              | Manifest, service worker e cache                   |
+| Testes       | Vitest + Testing Library     | Testes unitários e de componentes                  |
+| E2E          | Playwright                   | Testes de fluxos                                   |
+| Qualidade    | ESLint + Prettier            | Padronização                                       |
 
-**Integração Google:** priorizar a biblioteca oficial para navegador, com chave restrita por domínio e por APIs, projeto Google Cloud e faturamento habilitado. Não expor chaves secretas de servidor no frontend. Caso seja necessário consumir endpoints HTTP da Places API via `fetch`, avaliar uma função serverless, considerando CORS e proteção de credenciais.
+**Integração de dados:** serviços gratuitos chamados direto do navegador, sem backend. A chave da Geoapify é pública por natureza e fica restrita aos domínios do app. Respeitar as políticas dos serviços públicos (sem pedido a cada movimento do mapa, cache, tempo limite, sem novas tentativas agressivas). Não expor segredos no frontend.
 
 ## 5. Arquitetura
 
@@ -109,7 +112,7 @@ React Pages → Components
 Custom Hooks
     ↓
 Services
-    ├── Google Maps / Places
+    ├── Geoapify / Nominatim (dados OpenStreetMap)
     ├── Geolocation API
     └── localStorage
 ```
@@ -117,6 +120,8 @@ Services
 Separar apresentação, comportamento reutilizável, integração externa e tipos. Evitar lógica concentrada em `App.tsx`.
 
 ## 6. Estrutura de pastas
+
+Estrutura planejada. A estrutura real, sempre atualizada, está em [architecture.md](architecture.md#estrutura-atual).
 
 ```text
 burger-match/
@@ -166,9 +171,8 @@ burger-match/
 │   │   ├── useGeolocation.ts
 │   │   └── useLocalStorage.ts
 │   ├── services/
-│   │   ├── google/
-│   │   │   ├── googleMapsLoader.ts
-│   │   │   └── placesService.ts
+│   │   ├── places/           (PlacesProvider: Geoapify, Overpass, mock)
+│   │   ├── location/         (GPS e busca de região)
 │   │   └── storage/favoritesStorage.ts
 │   ├── types/
 │   │   ├── place.types.ts
@@ -228,7 +232,7 @@ export interface BurgerPlace {
 }
 ```
 
-Dados opcionais podem não estar disponíveis. Fotos e informações obtidas do Google devem seguir as políticas de atribuição, exibição e cache. Guardar preferencialmente os identificadores permitidos dos locais favoritos e buscar novamente os detalhes quando necessário.
+Dados opcionais podem não estar disponíveis. Os dados do OpenStreetMap exigem o crédito "© colaboradores do OpenStreetMap" (licença ODbL) e o plano gratuito da Geoapify exige atribuição. Guardar preferencialmente os identificadores permitidos dos locais favoritos e buscar novamente os detalhes quando necessário.
 
 ## 8. Regras de negócio
 
@@ -253,7 +257,7 @@ Dados opcionais podem não estar disponíveis. Fotos e informações obtidas do 
 | --------------- | --------------------------------------------------------- |
 | Responsividade  | Celulares, tablets e desktops                             |
 | Acessibilidade  | Contraste adequado, teclado e alternativas aos gestos     |
-| Segurança       | HTTPS, chave Google restrita, sem segredos no frontend    |
+| Segurança       | HTTPS, chave Geoapify restrita, sem segredos no frontend  |
 | Desempenho      | Carregamento sob demanda e otimização de imagens próprias |
 | Compatibilidade | Navegadores modernos Chrome, Edge, Firefox e Safari       |
 | Persistência    | Favoritos locais sujeitos à limpeza do navegador          |
@@ -280,7 +284,7 @@ Dados opcionais podem não estar disponíveis. Fotos e informações obtidas do 
 ### Fase 3 — Funcionalidades reais
 
 - [ ] Geolocalização e escolha manual.
-- [ ] Integração Google Maps / Places.
+- [ ] Integração com dados reais (OpenStreetMap) e mapa.
 - [ ] Swipe e desfazer.
 - [ ] Favoritos em localStorage.
 
@@ -304,7 +308,7 @@ O usuário deverá conseguir:
 7. Abrir detalhes e rotas externas no Google Maps.
 8. Instalar o PWA em dispositivos compatíveis.
 
-Também devem ser validados os fluxos de erro, acessibilidade, funcionamento em dispositivos móveis e controles de custo da plataforma Google.
+Também devem ser validados os fluxos de erro, acessibilidade, funcionamento em dispositivos móveis e limites de uso dos serviços gratuitos.
 
 ## 12. Fora do escopo inicial
 
@@ -312,4 +316,4 @@ Não serão desenvolvidos no MVP: autenticação, cadastro de usuário, avaliaç
 
 ## 13. Próximo passo
 
-Inicializar a base React + TypeScript + Vite, configurar Tailwind CSS e React Router, incorporar a identidade visual e montar as cinco telas com dados simulados antes da integração com o Google.
+Inicializar a base React + TypeScript + Vite, configurar Tailwind CSS e React Router, incorporar a identidade visual e montar as cinco telas com dados simulados antes da integração com dados reais.

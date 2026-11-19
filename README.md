@@ -106,6 +106,8 @@ Configure no arquivo `.env.local` (ignorado pelo Git). O modelo completo, coment
 
 ### Obtendo a chave da Geoapify
 
+Passo a passo completo (inclusive Nominatim, mapa e Overpass) em [docs/data-services.md](docs/data-services.md).
+
 1. Crie uma conta gratuita (sem cartão) em <https://myprojects.geoapify.com>.
 2. Crie um projeto e copie a chave de API para `VITE_GEOAPIFY_API_KEY`.
 3. **Restrinja a chave** no painel da Geoapify, liberando só os endereços do app (ex.: `http://localhost:5173` e o domínio publicado).
@@ -179,6 +181,7 @@ O app exibe a atribuição exigida por cada serviço. Para respeitar as polític
 - [Escopo](docs/scope.md)
 - [Requisitos](docs/requirements.md)
 - [Arquitetura e decisões](docs/architecture.md)
+- [Serviços de dados e mapa](docs/data-services.md) — configuração da Geoapify, Nominatim e OpenFreeMap
 - [Mockups](docs/design/)
 
 ## Stack

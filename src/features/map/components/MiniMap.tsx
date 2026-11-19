@@ -12,7 +12,7 @@ interface MiniMapProps {
 /**
  * Minimapa ILUSTRATIVO (não interativo): você e o local escolhido.
  * Decorativo — a informação útil (endereço e distância) está em texto ao lado.
- * Na Etapa 4 pode virar um mapa estático do Google.
+ * Aparece enquanto o LiveMiniMap (MapLibre) carrega e fora do desktop.
  */
 export function MiniMap({ center, destination, className }: MiniMapProps) {
   const project = createBoxProjection([center, destination], {

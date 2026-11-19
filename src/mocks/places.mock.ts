@@ -1,11 +1,11 @@
 /**
- * DADOS SIMULADOS — usados até a Etapa 4, quando a Places API (New) os substitui.
+ * DADOS SIMULADOS — modo demonstração (VITE_PLACES_PROVIDER=mock) e testes.
  * Nomes, endereços e telefones são fictícios.
  *
  * Cada local guarda sua DISTÂNCIA e DIREÇÃO em relação ao centro da busca (offset),
  * não coordenadas fixas. Assim, onde quer que o usuário esteja (GPS ou bairro
  * buscado), as mesmas 16 hamburguerias aparecem em volta dele — e o app pode ser
- * testado em qualquer cidade antes da integração com o Google.
+ * testado em qualquer cidade, sem acessar a rede.
  */
 import type { SearchArea } from '@/types/location.types'
 import type { BurgerPlace, PlacePhoto } from '@/types/place.types'

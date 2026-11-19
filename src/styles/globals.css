@@ -76,8 +76,8 @@
 
 @layer components {
   /*
-   * Fundo do mapa ilustrativo (Etapa 2): "ruas" desenhadas com gradientes.
-   * Será substituído pelo Google Maps na Etapa 4.
+   * Fundo do minimapa ilustrativo (MiniMap): "ruas" desenhadas com gradientes.
+   * Aparece enquanto o minimapa real (MapLibre) carrega e fora do desktop.
    */
   .mock-map {
     background-color: color-mix(in oklab, var(--color-creme) 80%, var(--color-pao));

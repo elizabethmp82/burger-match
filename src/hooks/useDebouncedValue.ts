@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 
 /**
  * Devolve `value` só depois de `delayMs` sem mudanças.
- * Na busca, evita uma chamada (paga) ao Google a cada tecla digitada.
+ * Útil quando cada mudança dispararia um pedido à rede: espera a pessoa parar de digitar.
  */
 export function useDebouncedValue<T>(value: T, delayMs: number): T {
   const [debounced, setDebounced] = useState(value)

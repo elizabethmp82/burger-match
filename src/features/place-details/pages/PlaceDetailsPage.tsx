@@ -59,7 +59,7 @@ export function PlaceDetailsPage() {
           icon={SearchX}
           titleAs="h1"
           title="Local não encontrado"
-          description="Esta hamburgueria não está disponível. Ela pode ter saído do Google Maps ou o link está incorreto."
+          description="Esta hamburgueria não está disponível. Ela pode ter saído do mapa ou o link está incorreto."
         >
           <button type="button" onClick={goBack} className={buttonClasses('primary', 'w-full')}>
             Voltar
@@ -131,7 +131,7 @@ function WidePlaceDetails({ place, onBack }: { place: BurgerPlace; onBack: () =>
                     className="aspect-square w-full rounded-2xl border-2 border-tostado"
                     iconClassName="size-6"
                   />
-                  {/* Crédito do autor em cada foto (exigência de atribuição do Google). */}
+                  {/* Crédito do autor em cada foto (quando a fonte informa). */}
                   <figcaption className="mt-1.5 text-xs text-texto-suave">
                     <PhotoCredit photo={photo} />
                   </figcaption>

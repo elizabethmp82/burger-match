@@ -2,60 +2,84 @@
 
 ## Visão geral
 
-SPA em React + TypeScript, compilada pelo Vite, sem backend próprio. Organização **por funcionalidade** (feature-based): cada pasta em `src/features/` agrupa as páginas, os componentes e os hooks de uma área do produto.
+SPA em React + TypeScript, compilada pelo Vite, sem backend próprio nem banco de dados. Organização **por funcionalidade** (feature-based): cada pasta em `src/features/` agrupa as páginas, os componentes e os hooks de uma área do produto.
 
 ```text
 Páginas (features/*/pages)
     ↓ usam
-Componentes (features/*/components, components/ui, components/layout)
+Componentes (features/*/components, components/ui, components/layout, components/place)
     ↓ obtêm dados por
 Hooks (features/*/hooks, hooks/)
     ↓ delegam integração a
-Services (services/google, services/storage)  →  Google Maps / Places, Geolocation, localStorage
+Services (services/places, services/location)
+    → Geoapify (dados do OpenStreetMap), Nominatim, Geolocation API, sessionStorage
 ```
 
-Regras: componentes visuais não chamam APIs diretamente; integrações externas ficam em `services/`; contratos de dados ficam em `types/`; funções puras ficam em `utils/`.
+Regras: componentes visuais não chamam APIs diretamente; integrações externas ficam em `services/`; contratos de dados ficam em `types/`; funções puras ficam em `utils/`; configuração vinda do ambiente fica em `config/env.ts`.
 
-## Estrutura atual (Etapa 2)
+Serviços externos — todos sem cobrança obrigatória (detalhes em [data-services.md](data-services.md)):
+
+| Serviço                      | Para quê                                        | Onde no código                                     |
+| ---------------------------- | ----------------------------------------------- | -------------------------------------------------- |
+| Geoapify Places API          | Hamburguerias próximas e detalhes (dados OSM)   | `services/places/geoapify/`                        |
+| Overpass API (temporária)    | Alternativa de dados OSM sem chave              | `services/places/overpass/`                        |
+| Nominatim                    | Bairro/cidade fora da lista local (sob pedido)  | `services/location/nominatim/`                     |
+| OpenFreeMap + MapLibre GL JS | Mapa interativo e minimapa                      | `features/map/components/BurgerMap`, `LiveMiniMap` |
+| Google Maps (só link)        | "Como chegar" — URL de rotas, sem API nem chave | `utils/googleMaps.ts`                              |
+
+## Estrutura atual
 
 ```text
 src/
 ├── assets/logos/                 Arquivos originais da identidade visual
 ├── components/
-│   ├── layout/                   AppLayout (h-dvh: só o <main> rola), BottomNavigation
-│   ├── place/                    PlaceRow, PlaceMeta, OpenStatus, PhotoTile (usados em várias telas)
+│   ├── layout/                   AppLayout (h-dvh: só o <main> rola), BottomNavigation, SideNavigation, RequireLocation
+│   ├── place/                    PlaceRow, PlaceMeta, OpenStatus, PhotoTile, PlaceDetailsPanel, LoadMorePlaces…
 │   ├── providers/                SearchAreaProvider (região + raio)
-│   └── ui/                       Brand, EmptyState, MapPinShape, buttonStyles
+│   └── ui/                       Brand, EmptyState, LoadState, DataAttribution, MapPinShape, buttonStyles
+├── config/env.ts                 Leitura e validação das variáveis VITE_* (fonte de dados, chave, URLs)
 ├── features/
-│   ├── onboarding/               WelcomePage → WelcomeIntro | LocationStep (?step=location)
-│   ├── discovery/                SwipeDeck, BurgerCard, SwipeActions, DeckEmptyState, AreaPill
+│   ├── onboarding/               WelcomePage → WelcomeIntro | LocationStep (GPS ou RegionSearch)
+│   ├── discovery/                SwipeDeck, BurgerCard, SwipeActions, PlaceAside (painel desktop), atalhos
 │   │   ├── context/              DiscoverySessionProvider (histórico de decisões)
-│   │   └── hooks/                useDiscoveryDeck (curtir/pular/desfazer), useDiscoverySession
+│   │   └── hooks/                useDiscoveryDeck (curtir/pular/desfazer), useDeckShortcuts
 │   ├── favorites/                FavoritesPage, FavoriteCard, FavoritesProvider, useFavorites
-│   ├── map/                      MapPage, MockMap, PlaceMarker, utils/projectToBox
+│   ├── map/                      MapPage, BurgerMap (MapLibre, lazy), LiveMiniMap, MiniMap (ilustrativo), NearbyPanel
+│   │   └── lib/maplibreSetup.ts  CSS + worker do MapLibre (compartilhado pelos mapas)
 │   └── place-details/            PlaceDetailsPage, PhotoGallery
-├── hooks/                        useSearchArea, usePlaces (useNearbyPlaces/usePlace/usePlacesByIds), useGoBack
-├── mocks/places.mock.ts          16 hamburguerias fictícias, posicionadas em volta do centro (12 dentro de 5 km)
-├── mocks/regions.mock.ts         Bairros e cidades para a busca manual (até a Etapa 4)
-├── services/places/              placesService (fachada) + mockPlacesService
-├── services/google/              googleMapsLoader, googlePlacesService, placeMapper
-├── services/location/            geolocationService (GPS) e regionSearchService (busca manual)
-├── types/                        place.types, location.types
-├── utils/                        distance (Haversine), formatters (pt-BR), googleMaps, cn
+├── hooks/                        useSearchArea, usePlaces, useGeolocation, useMediaQuery, useNow, useGoBack…
+├── lib/queryClient.ts            TanStack Query: cache de 30 min, sem retry automático
+├── mocks/                        Hamburguerias simuladas (modo demonstração) e lista local de regiões
 ├── routes/                       AppRoutes e paths
-└── styles/globals.css            Tailwind v4 + tokens + fundo do mapa ilustrativo
+├── services/
+│   ├── places/                   placesService (fachada) + PlacesProvider (interface)
+│   │   ├── geoapify/             Provider principal: cliente HTTP, mapper, paginação
+│   │   ├── overpass/             Provider alternativo (mantido temporariamente)
+│   │   ├── osm/                  Partes comuns aos dados OSM: IDs, mapper de tags, deduplicação
+│   │   ├── mock/                 Provider do modo demonstração
+│   │   └── withSessionCache.ts   Cache em sessionStorage na frente de qualquer provider
+│   └── location/                 geolocationService (GPS) e regionSearchService (lista local + Nominatim)
+├── styles/globals.css            Tailwind v4 + tokens + fundo do minimapa ilustrativo
+├── types/                        place.types, location.types
+└── utils/                        distance (Haversine), formatters (pt-BR), openingHours, osmOpeningHours, googleMaps (link), share, cn
 ```
 
 ### Fluxo de dados
 
 ```text
 Páginas ──► hooks (usePlaces, useDiscoveryDeck, useFavorites, useSearchArea)
-                │                          │
-                ▼                          ▼
-     services/places (mock)      Contexts em App.tsx (estado em memória)
+                │                                   │
+                ▼                                   ▼
+     TanStack Query (memória, 30 min)     Contexts em App.tsx (estado em memória)
+                │
+                ▼
+     services/places/placesService
+                │
+                ▼
+     withSessionCache (sessionStorage) ──► PlacesProvider: Geoapify | Overpass | Mock
 ```
 
-Os contexts ficam acima do `RouterProvider`, então região, favoritos e decisões do baralho sobrevivem à troca de telas — mas **não** a um recarregamento (a persistência vem na Etapa 6).
+A fonte é escolhida uma vez, por `VITE_PLACES_PROVIDER` (padrão `geoapify`; `mock` = modo demonstração). Os contexts ficam acima do `RouterProvider`, então região, favoritos e decisões do baralho sobrevivem à troca de telas — mas **não** a um recarregamento (a persistência dos favoritos vem na Etapa 6).
 
 ## Rotas
 
@@ -97,7 +121,7 @@ Bricolage Grotesque 800 (títulos, `tracking-logo` = -3,5%) e Inter 400/500/600/
 
 ### ADR-007 — Dados simulados atrás de um serviço
 
-As telas não importam o mock diretamente: usam hooks (`usePlaces`), que chamam `services/places/placesService`. Na Etapa 4 só a implementação do serviço/hooks muda (passando a ter carregamento e erro — RN12).
+As telas não importam o mock diretamente: usam hooks (`usePlaces`), que chamam `services/places/placesService`. Na Etapa 4 só a implementação do serviço/hooks mudou (passando a ter carregamento e erro — RN12); hoje o mock é um dos `PlacesProvider` (ADR-015).
 
 ### ADR-008 — Estado global com Context, sem biblioteca
 
@@ -131,20 +155,41 @@ Breakpoints padrão do Tailwind: celular `< md` (768px), tablet `md`, desktop `l
 - **Fluxo:** a região começa como exemplo (`source: 'default'`). Descobrir e Mapa ficam atrás de `RequireLocation`, que leva a "Onde você está?" e depois devolve o usuário à tela pedida (`state.from`). Favoritos e Detalhes funcionam sem escolha.
 - **GPS (RN02):** `navigator.geolocation` só é chamado no clique, com `enableHighAccuracy: false` (precisão de bairro basta), `timeout` de 10 s e `maximumAge` de 5 min. Erros tipados (`denied`, `unavailable`, `timeout`, `unsupported`) viram mensagens que sempre apontam a busca manual (RN03/RN12). A Permissions API avisa de antemão quando a localização está bloqueada.
 - **Privacidade:** a localização fica só em memória (contexto React) — não é salva nem enviada, como a tela promete.
-- **Busca manual:** combobox acessível (padrão WAI-ARIA) sobre uma lista local de bairros e cidades, sem acentos/maiúsculas na comparação. Na Etapa 4 o serviço passa a usar o Autocomplete da Places API, sem mudar a interface.
-- **Mocks relativos ao centro:** os locais simulados guardam distância e direção (`offset`), não coordenadas. Assim o app funciona em qualquer cidade até a integração com o Google.
+- **Busca manual:** combobox acessível (padrão WAI-ARIA) sobre uma lista local de bairros e cidades, sem acentos/maiúsculas na comparação. Fora da lista, busca no Nominatim sob confirmação (ADR-018).
+- **Mocks relativos ao centro:** os locais simulados guardam distância e direção (`offset`), não coordenadas. Assim o modo demonstração funciona em qualquer cidade.
 - **Sessão do baralho por região:** trocar de região recomeça o baralho; mudar só o raio, não. Favoritos não são afetados.
 
-### ADR-014 — Google Maps Platform (Etapa 4)
+### ADR-014 — Google Maps Platform (Etapa 4) — **substituída pela ADR-015**
 
-- **Duas fontes, uma interface:** `services/places/placesService` e `services/location/regionSearchService` escolhem entre o Google (`services/google/*`) e os dados simulados conforme `isGoogleMapsEnabled` (há chave em `VITE_GOOGLE_MAPS_API_KEY`). Sem chave = modo demonstração, útil para desenvolver sem custo e para os testes da Etapa 8.
-- **Biblioteca oficial no navegador:** `@googlemaps/js-api-loader` (`setOptions` + `importLibrary`) e a classe `Place` da Places API (New) — sem servidor próprio. A chave é pública por natureza e deve ser restrita por domínio e por API (docs/google-maps-setup.md).
-- **TanStack Query para dados remotos:** carregamento, erro, nova tentativa e cache. `staleTime` de 30 min, sem refetch no foco e 1 nova tentativa — escolhas para economizar chamadas pagas. A busca por proximidade já preenche o cache de cada local (`['places','detail',id]`), então Detalhes e Favoritos vindos da busca não geram novas chamadas. A distância é recalculada na exibição, por isso o cache de um local não depende da região.
-- **Campos:** `placeMapper.ts` concentra a lista de campos pedidos (o preço depende do campo mais caro) e a conversão `Place → BurgerPlace`. Lugares fechados definitivamente são descartados; no máximo 10 fotos por local.
-- **"Aberto agora" sempre atual (RN11):** guardamos a grade semanal (`openingSchedule`) e calculamos o status ao exibir (`utils/openingHours.ts`, função pura), atualizado a cada minuto (`useNow`).
-- **Mapa:** `GoogleMapView` tem as mesmas props do `MockMap`; cria o mapa uma vez e só atualiza marcadores (`AdvancedMarkerElement` + `PinElement` nas cores da marca), enquadramento e seleção. Textos vindos da API entram no DOM por `textContent`, nunca `innerHTML`.
-- **Autocomplete:** sugestões com `(regions)` restritas ao Brasil, token de sessão de cobrança, espera de 300 ms entre digitações; as coordenadas só são buscadas para a sugestão escolhida.
-- **Atribuição:** fotos com crédito do autor (link quando houver) e "Dados de Google Maps" onde dados do Google aparecem fora do mapa.
+Primeira versão da Etapa 4: `@googlemaps/js-api-loader`, Places API (New), Autocomplete e `AdvancedMarkerElement`, com chave em `VITE_GOOGLE_MAPS_API_KEY`. Nunca chegou a ser testada com chave real e foi removida (código, dependências e tipos `google.maps`). Do Google ficou apenas o **link** de rotas (`utils/googleMaps.ts`), que não usa API nem chave.
+
+### ADR-015 — Dados abertos no lugar do Google
+
+- **Motivo:** o app precisa continuar gratuito, inclusive depois de publicado. A Google Maps Platform exige conta de faturamento mesmo dentro da cota gratuita.
+- **Decisão:** dados do OpenStreetMap, mapa com MapLibre GL JS + OpenFreeMap, nenhum backend. Toda fonte de hamburguerias implementa a interface `PlacesProvider` (`searchNearby` paginado + `getByIds`); trocar de fonte não muda nenhuma tela.
+- **Boa convivência com serviços públicos:** nada de pedido a cada movimento do mapa, cache (memória + `sessionStorage`), tempo limite em todo pedido e **nenhuma nova tentativa automática** — quem tenta de novo é a pessoa, pelo botão. Erros viram `PlacesError` com um motivo (`network`, `timeout`, `rate-limited`, `unavailable`, `forbidden`, `not-configured`…) que a tela sabe explicar (RN12).
+- **Sem promessas de custo zero em qualquer escala:** os planos gratuitos têm limites e podem mudar; a documentação aponta as páginas oficiais.
+
+### ADR-016 — Geoapify como fonte principal
+
+- **Por quê:** os servidores públicos da Overpass falharam (timeouts/504) na rede de desenvolvimento. A Geoapify serve os mesmos dados OSM, com plano gratuito sem cartão.
+- **Busca principal:** categorias `catering.fast_food.burger` e `catering.restaurant.burger`, 40 por página (≤ 2 créditos), paginação real por `offset`. A busca **complementar** (lanchonetes e restaurantes em geral, mantendo só os com evidência de hambúrguer em categoria, cozinha ou nome) só roda quando a pessoa pede, pelo botão.
+- **IDs no formato OSM** (`node-123`, `way-456`): Detalhes buscam pelo `osm_id`, e favoritos antigos continuam válidos se a fonte mudar. Locais sem nome são descartados.
+- **Chave pública:** `VITE_GEOAPIFY_API_KEY` vai para o navegador; a proteção é a lista de domínios permitidos no painel da Geoapify. Nenhuma mensagem de erro inclui a URL (que leva a chave).
+- **Atribuição:** `DataAttribution` mostra "© colaboradores do OpenStreetMap" e "Busca por Geoapify" onde os dados aparecem.
+- **Overpass:** o provider continua no código temporariamente (`VITE_PLACES_PROVIDER=overpass`).
+
+### ADR-017 — Mapa com MapLibre GL JS + OpenFreeMap
+
+- **MapLibre GL JS** (código aberto) desenha o mapa; o estilo padrão é o "liberty" do **OpenFreeMap** (sem chave, sem limite de visualizações, uso comercial permitido, sem SLA). Trocar de estilo: `VITE_MAP_STYLE_URL`.
+- **Carregamento sob demanda:** `BurgerMap` e `LiveMiniMap` são `lazy`, então a biblioteca só é baixada nas telas com mapa. `lib/maplibreSetup.ts` concentra o CSS e o web worker.
+- **Fallback ilustrativo:** o `MiniMap` desenhado em CSS aparece enquanto o minimapa real carrega e fora do desktop (onde o painel não baixa a biblioteca).
+
+### ADR-018 — Busca de região: lista local + Nominatim sob confirmação
+
+- **Lista local** (`mocks/regions.mock.ts`) responde a cada tecla, sem rede.
+- **Nominatim** só é chamado quando a pessoa **confirma** (opção "Buscar em todo o mapa" ou Enter sem sugestão local): a política do servidor público proíbe autocomplete. O cliente espaça os pedidos (≥ 1,1 s), tem tempo limite de 10 s, não repete sozinho e guarda as respostas da sessão. O crédito ao OSM aparece junto dos resultados.
+- No modo demonstração a opção não aparece (sem rede). Servidor configurável por `VITE_NOMINATIM_URL`.
 
 ## Pontos de atenção conhecidos
 
