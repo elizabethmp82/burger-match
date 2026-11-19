@@ -24,12 +24,15 @@ export function formatCount(count: number): string {
 }
 
 /** 850 → "850 m" · 1240 → "1,2 km" · 4000 → "4,0 km" · 12400 → "12 km" */
+/** Espaço que não quebra: "390 m" nunca vira "390" numa linha e "m" na outra. */
+const NBSP = ' '
+
 export function formatDistance(meters: number): string {
   if (meters < 1000) {
-    return `${Math.max(10, Math.round(meters / 10) * 10)} m`
+    return `${Math.max(10, Math.round(meters / 10) * 10)}${NBSP}m`
   }
   const km = meters / 1000
-  return `${km >= 10 ? wholeKmFormat.format(km) : kmFormat.format(km)} km`
+  return `${km >= 10 ? wholeKmFormat.format(km) : kmFormat.format(km)}${NBSP}km`
 }
 
 /** 2 → "$$" */
