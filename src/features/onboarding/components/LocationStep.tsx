@@ -4,13 +4,14 @@ import { useLocation, useNavigate } from 'react-router'
 import type { LocationRedirectState } from '@/components/layout/RequireLocation'
 import { buttonClasses, iconButtonClasses } from '@/components/ui/buttonStyles'
 import { MapPinShape } from '@/components/ui/MapPinShape'
+import { RadiusPicker } from '@/components/ui/RadiusPicker'
 import { useGeolocation } from '@/hooks/useGeolocation'
 import { useGoBack } from '@/hooks/useGoBack'
 import { useSearchArea } from '@/hooks/useSearchArea'
 import { paths } from '@/routes/paths'
 import type { GeolocationErrorCode } from '@/services/location/geolocationService'
 import { resolveRegion } from '@/services/location/regionSearchService'
-import type { RegionSuggestion } from '@/types/location.types'
+import { SEARCH_RADII_KM, type RegionSuggestion } from '@/types/location.types'
 import { cn } from '@/utils/cn'
 import { BrandIllustration } from './BrandIllustration'
 import { RegionSearch } from './RegionSearch'
@@ -41,7 +42,7 @@ export function LocationStep() {
   const navigate = useNavigate()
   const goBack = useGoBack(paths.welcome)
   const destination = useDestination()
-  const { setLocation } = useSearchArea()
+  const { area, hasChosenLocation, setLocation, setRadius } = useSearchArea()
   const geolocation = useGeolocation()
   const searchInputRef = useRef<HTMLInputElement>(null)
   const locating = geolocation.status === 'locating'
@@ -145,6 +146,24 @@ export function LocationStep() {
             <LocationNotice tone="error">
               Não foi possível carregar esse lugar agora. Verifique a conexão e tente de novo.
             </LocationNotice>
+          )}
+
+          {/* Vale para o GPS e para a busca: setLocation mantém o raio escolhido aqui. */}
+          <RadiusPicker
+            options={SEARCH_RADII_KM}
+            value={area.radiusKm}
+            onChange={setRadius}
+            className="mt-6"
+          />
+          {hasChosenLocation && (
+            // Quem veio só trocar o raio não precisa escolher a região de novo.
+            <button
+              type="button"
+              onClick={() => void navigate(destination)}
+              className={buttonClasses('secondary', 'mt-3 w-full')}
+            >
+              Continuar em {area.label} · {area.radiusKm} km
+            </button>
           )}
         </div>
       </div>
