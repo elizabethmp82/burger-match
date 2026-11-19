@@ -12,7 +12,7 @@ Componentes (features/*/components, components/ui, components/layout, components
 Hooks (features/*/hooks, hooks/)
     ↓ delegam integração a
 Services (services/places, services/location)
-    → Geoapify (dados do OpenStreetMap), Nominatim, Geolocation API, sessionStorage
+    → Geoapify (dados do OpenStreetMap), Nominatim, Geolocation API, sessionStorage, localStorage
 ```
 
 Regras: componentes visuais não chamam APIs diretamente; integrações externas ficam em `services/`; contratos de dados ficam em `types/`; funções puras ficam em `utils/`; configuração vinda do ambiente fica em `config/env.ts`.
@@ -58,7 +58,8 @@ src/
 │   │   ├── osm/                  Partes comuns aos dados OSM: IDs, mapper de tags, deduplicação
 │   │   ├── mock/                 Provider do modo demonstração
 │   │   └── withSessionCache.ts   Cache em sessionStorage na frente de qualquer provider
-│   └── location/                 geolocationService (GPS) e regionSearchService (lista local + Nominatim)
+│   ├── location/                 geolocationService (GPS) e regionSearchService (lista local + Nominatim)
+│   └── storage/                  favoritesStorage (IDs dos favoritos no localStorage, validados)
 ├── styles/globals.css            Tailwind v4 + tokens + fundo do minimapa ilustrativo
 ├── types/                        place.types, location.types
 └── utils/                        distance (Haversine), formatters (pt-BR), openingHours, osmOpeningHours, googleMaps (link), share, cn
@@ -79,7 +80,7 @@ Páginas ──► hooks (usePlaces, useDiscoveryDeck, useFavorites, useSearchAr
      withSessionCache (sessionStorage) ──► PlacesProvider: Geoapify | Overpass | Mock
 ```
 
-A fonte é escolhida uma vez, por `VITE_PLACES_PROVIDER` (padrão `geoapify`; `mock` = modo demonstração). Os contexts ficam acima do `RouterProvider`, então região, favoritos e decisões do baralho sobrevivem à troca de telas — mas **não** a um recarregamento (a persistência dos favoritos vem na Etapa 6).
+A fonte é escolhida uma vez, por `VITE_PLACES_PROVIDER` (padrão `geoapify`; `mock` = modo demonstração). Os contexts ficam acima do `RouterProvider`, então região, favoritos e decisões do baralho sobrevivem à troca de telas. Ao recarregar, só os **favoritos** voltam (salvos no aparelho, ADR-020); região, raio e decisões do baralho recomeçam — a localização nunca é salva.
 
 ## Rotas
 
@@ -202,6 +203,17 @@ Primeira versão da Etapa 4: `@googlemaps/js-api-loader`, Places API (New), Auto
 - **Visual:** o card segue o dedo e inclina até 15°; selos "Curtir"/"Pular"/"Detalhes" aparecem conforme o progresso; ao valer, o card sai da tela em 200 ms. Com `prefers-reduced-motion`, sem inclinação nem animação de saída.
 - **Botões e teclado também animam:** `SwipeableCard` expõe `fly(direção)` (via `ref`); ←/→/↑ e os botões ✕/❤ fazem o mesmo voo do gesto e a ação (curtir, pular, abrir Detalhes) só acontece no fim do voo. Toques repetidos durante o voo são ignorados (nada de curtir dois de uma vez).
 - **`touch-action: none`** no card: no celular o arrasto não rola a página. Botões e setas do teclado seguem como alternativa (acessibilidade).
+
+### ADR-020 — Favoritos no localStorage (Etapa 6)
+
+- **Só os IDs** (`node-123`, `way-456`), como pede o escopo (§7): os dados do lugar vêm do serviço (com o cache da sessão). Nada de localização é salvo.
+- **Formato versionado:** `burgermatch:favorites:v1` → `{ "version": 1, "ids": [...] }`. Mudou o formato? Nova versão de chave, com migração.
+- **Tudo validado ao ler:** só IDs no formato esperado, sem repetidos (RN08), no máximo 500. JSON corrompido vira lista vazia, sem quebrar.
+- **Armazenamento indisponível** (bloqueado, modo privado, cota cheia): o app segue com os favoritos só na memória.
+- **Várias abas:** o evento `storage` atualiza as outras abas na hora.
+- **Modo demonstração:** chave própria (`burgermatch:favorites:demo:v1`), para IDs `mock-…` não se misturarem aos reais.
+- **Desfazer (RN07)** continua valendo: remover o favorito também remove do armazenamento.
+- **Não salvo de propósito:** região, raio e histórico do baralho (privacidade e simplicidade). Depois de recarregar, um lugar já curtido pode reaparecer no baralho; curtir de novo não duplica.
 
 ## Pontos de atenção conhecidos
 

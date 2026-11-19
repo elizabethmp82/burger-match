@@ -42,7 +42,7 @@ O app é **100% front-end** (sem backend nem banco de dados) e foi pensado para 
 - **Boas-vindas e localização** — usa o GPS do aparelho ou uma busca manual de bairro/cidade, com raio de busca de 5, 10 ou 20 km.
 - **Descobrir** — baralho de cards, do mais próximo para o mais distante. Arraste para a direita (curtir), esquerda (pular) ou para cima (detalhes); também há botões e desfazer.
   - Atalhos no desktop: `←` pular · `→` curtir · `↑` detalhes · `Ctrl/⌘ + Z` desfazer.
-- **Favoritos** — lista das hamburguerias curtidas (no desktop ≥ 1280 px, lista + detalhe lado a lado).
+- **Favoritos** — salvos no aparelho (continuam depois de recarregar ou fechar o navegador); lista das hamburguerias curtidas (no desktop ≥ 1280 px, lista + detalhe lado a lado).
 - **Mapa** — mapa interativo (MapLibre) com as hamburguerias da região; no desktop, lista lateral sincronizada.
 - **Detalhes** — endereço, horário de funcionamento, status "aberto/fechado", distância, compartilhar e rota pelo Google Maps (apenas link, sem API).
 - **Modo demonstração** — dados simulados, sem acessar a rede, para desenvolver e testar em qualquer lugar.
@@ -65,8 +65,8 @@ O desenvolvimento acontece em etapas, cada uma validada antes da próxima.
 | 2     | Interfaces (dados mock) | ✅ Concluída                                                               |
 | 3     | Geolocalização          | ✅ Concluída                                                               |
 | 4     | Dados reais e mapa      | ✅ Concluída — Geoapify + OpenStreetMap, MapLibre + OpenFreeMap, Nominatim |
-| 5     | Swipe (gestos)          | 🧪 Implementada, aguardando aprovação                                      |
-| 6     | Favoritos persistentes  | ⏳ Planejada (localStorage)                                                |
+| 5     | Swipe (gestos)          | ✅ Concluída                                                               |
+| 6     | Favoritos persistentes  | 🧪 Implementada, aguardando aprovação                                      |
 | 7     | PWA                     | ⏳ Planejada                                                               |
 | 8     | Testes e publicação     | ⏳ Planejada                                                               |
 
@@ -174,6 +174,7 @@ O app exibe a atribuição exigida por cada serviço. Para respeitar as polític
 ## Privacidade
 
 - A localização **nunca é salva**: é usada só durante a sessão para buscar lugares próximos.
+- Os favoritos ficam só no seu navegador (`localStorage`), e apenas os IDs dos lugares. Limpar os dados do site apaga os favoritos.
 - O Google Tag Manager só é incluído no build de produção — o ambiente de desenvolvimento não gera visitas nos relatórios.
 
 ## Documentação
