@@ -31,7 +31,7 @@
   --color-alface-forte: color-mix(in oklab, var(--color-alface) 65%, var(--color-tostado));
 
   /* Tipografia oficial */
-  --font-display: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Bricolage Grotesque Variable', ui-sans-serif, system-ui, sans-serif;
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
 
   /* Espaçamento entre letras do logotipo (-3,5%) */

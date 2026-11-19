@@ -1,3 +1,5 @@
+/// <reference types="vite-plugin-pwa/react" />
+
 /** Tipos das variáveis de ambiente lidas pelo app (veja .env.example). */
 interface ImportMetaEnv {
   /** "geoapify" (padrão), "overpass" ou "mock" (modo demonstração). */

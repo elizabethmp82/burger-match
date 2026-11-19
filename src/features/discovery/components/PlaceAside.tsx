@@ -5,6 +5,7 @@ import { OpenStatus } from '@/components/place/OpenStatus'
 import { PhotoTile } from '@/components/place/PhotoTile'
 import { buttonClasses } from '@/components/ui/buttonStyles'
 import { DataAttribution } from '@/components/ui/DataAttribution'
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { MiniMap } from '@/features/map/components/MiniMap'
 import { DESKTOP_QUERY, useMediaQuery } from '@/hooks/useMediaQuery'
 import { placeDetailsPath } from '@/routes/paths'
@@ -124,11 +125,16 @@ export function PlaceAside({ place, origin, className }: PlaceAsideProps) {
         onde este painel fica escondido), vale o ilustrativo — sem baixar a biblioteca à toa.
       */}
       {isDesktop ? (
-        <Suspense
+        // Se o mapa real não carregar (sem internet, versão nova publicada), fica o ilustrativo.
+        <ErrorBoundary
           fallback={<MiniMap center={origin} destination={place.location} className="h-40" />}
         >
-          <LiveMiniMap center={origin} destination={place.location} className="h-40" />
-        </Suspense>
+          <Suspense
+            fallback={<MiniMap center={origin} destination={place.location} className="h-40" />}
+          >
+            <LiveMiniMap center={origin} destination={place.location} className="h-40" />
+          </Suspense>
+        </ErrorBoundary>
       ) : (
         <MiniMap center={origin} destination={place.location} className="h-40" />
       )}

@@ -114,7 +114,7 @@ Usamos `createBrowserRouter` + `RouterProvider` da biblioteca `react-router`, se
 
 ### ADR-005 — Tipografia
 
-Bricolage Grotesque 800 (títulos, `tracking-logo` = -3,5%) e Inter 400/500/600/700 (texto), via Google Fonts (SIL OFL). Na Etapa 7 (PWA) avaliaremos auto-hospedar as fontes para funcionamento offline.
+Bricolage Grotesque 800 (títulos, `tracking-logo` = -3,5%) e Inter 400/500/600/700 (texto), licença SIL OFL. Desde a Etapa 7 são **hospedadas no próprio app** (pacotes Fontsource, só o alfabeto latino): funcionam offline e não enviam visitas ao Google.
 
 ### ADR-006 — Alias `@/`
 
@@ -215,8 +215,20 @@ Primeira versão da Etapa 4: `@googlemaps/js-api-loader`, Places API (New), Auto
 - **Desfazer (RN07)** continua valendo: remover o favorito também remove do armazenamento.
 - **Não salvo de propósito:** região, raio e histórico do baralho (privacidade e simplicidade). Depois de recarregar, um lugar já curtido pode reaparecer no baralho; curtir de novo não duplica.
 
+### ADR-021 — PWA com vite-plugin-pwa (Etapa 7)
+
+- **Instalável:** manifest (`pt-BR`, `standalone`, cor creme) com ícones 192/512, um ícone _maskable_ (desenho dentro da zona segura, fundo creme) e `apple-touch-icon` para iOS. Ícones gerados a partir de `src/assets/logos/burgermatch-icone.png`.
+- **Service worker (Workbox, `generateSW`):** pré-carrega o app (~900 KB: HTML, JS, CSS, fontes latinas, ícones) → abre sem internet. Rotas do SPA caem no `index.html` (`navigateFallback`).
+- **MapLibre fora do pré-cache:** o pedaço `maplibre-*` (~1,5 MB com o worker) só é baixado e guardado na primeira vez que um mapa abre (`CacheFirst`). Quem nunca abre o mapa não paga esse download.
+- **Mapa offline parcial:** tiles já vistos (até 600, 7 dias) e estilo/fontes do OpenFreeMap ficam guardados.
+- **Dados não passam pelo service worker** (Geoapify, Nominatim, Overpass): já existe o cache da sessão, e assim as regras de cada serviço continuam valendo num lugar só. Sem internet, as telas mostram o erro de conexão (RN12).
+- **Atualização com aviso:** `registerType: 'prompt'` + `UpdatePrompt` ("Nova versão disponível · Atualizar / Agora não"). Não recarregamos sozinhos para não perder baralho e região no meio do uso.
+- **Falhas de carregamento isoladas:** `ErrorBoundary` em volta dos mapas sob demanda (minimapa vira o ilustrativo; Mapa mostra "Mapa indisponível" com a lista funcionando) e `RouteError` como tela de erro das rotas (Recarregar / Voltar ao início), no lugar da mensagem técnica do React Router.
+- **Peso:** ícone da marca no app agora em WebP 640 px (27 KB, antes PNG 1024 px / 126 KB); favicon de 64 px (7 KB).
+- **`npm audit`:** 12 alertas moderados, todos em ferramentas de build/lint (`minimatch`/`glob` via ESLint e workbox-build) — não vão para o app publicado.
+
 ## Pontos de atenção conhecidos
 
 - `react-router@8` declara `engines.node >=22.22.0`; o ambiente atual usa Node 22.19.0. Funciona para SPA, mas recomenda-se atualizar o Node para a LTS mais recente.
 - `npm audit` aponta 10 vulnerabilidades moderadas com origem única no `minimatch` (dependência do ESLint, apenas em desenvolvimento; não vai para o bundle).
-- `burgermatch-logo.png` tem ~300 KB; otimizar (WebP/tamanho adequado) nas etapas de PWA/publicação.
+- `burgermatch-logo.png` e `burgermatch-logo-sem-slogan.png` (~300 KB) não são usados no app; ficam como arquivos originais da marca.

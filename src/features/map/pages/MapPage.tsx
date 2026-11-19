@@ -2,7 +2,9 @@ import { MapPinOff } from 'lucide-react'
 import { lazy, Suspense, useState } from 'react'
 import { LoadMorePlaces } from '@/components/place/LoadMorePlaces'
 import { PlaceRow } from '@/components/place/PlaceRow'
+import { buttonClasses } from '@/components/ui/buttonStyles'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { ErrorState, LoadingState } from '@/components/ui/LoadState'
 import { useFavorites } from '@/features/favorites/hooks/useFavorites'
 import { DESKTOP_QUERY, useMediaQuery } from '@/hooks/useMediaQuery'
@@ -84,21 +86,23 @@ export function MapPage() {
       )}
 
       <div className="relative h-full min-w-0 flex-1 bg-creme">
-        <Suspense fallback={<LoadingState className="h-full justify-center" />}>
-          <BurgerMap
-            center={area.center}
-            areaKey={areaKey(area.center, area.radiusKm)}
-            places={shown}
-            fitTo={places.map((place) => place.location)}
-            isReady={!nearby.isPending}
-            selectedId={selected?.placeId}
-            focus={focus}
-            onSelect={setSelectedId}
-            padding={isDesktop ? DESKTOP_PADDING : MOBILE_PADDING}
-            showSelectedLabel={isDesktop}
-            controlsClassName="top-16 right-3 lg:top-4 lg:right-4"
-          />
-        </Suspense>
+        <ErrorBoundary fallback={<MapUnavailable />}>
+          <Suspense fallback={<LoadingState className="h-full justify-center" />}>
+            <BurgerMap
+              center={area.center}
+              areaKey={areaKey(area.center, area.radiusKm)}
+              places={shown}
+              fitTo={places.map((place) => place.location)}
+              isReady={!nearby.isPending}
+              selectedId={selected?.placeId}
+              focus={focus}
+              onSelect={setSelectedId}
+              padding={isDesktop ? DESKTOP_PADDING : MOBILE_PADDING}
+              showSelectedLabel={isDesktop}
+              controlsClassName="top-16 right-3 lg:top-4 lg:right-4"
+            />
+          </Suspense>
+        </ErrorBoundary>
 
         {/* Celular/tablet: qual região está no mapa (no desktop, ela aparece na barra lateral). */}
         <p className="absolute top-4 left-1/2 z-20 max-w-[calc(100%-2rem)] -translate-x-1/2 truncate rounded-full border-2 border-tostado bg-superficie px-3 py-1 text-xs font-semibold lg:hidden">
@@ -156,4 +160,29 @@ function matchesFilter(
   if (filter === 'open') return place.openNow === true
   if (filter === 'favorites') return isFavorite(place.placeId)
   return true
+}
+
+/**
+ * O mapa não carregou (sem internet na 1ª vez, ou versão nova publicada).
+ * A lista "Por perto" continua funcionando no desktop. React.lazy guarda a falha,
+ * por isso "Tentar de novo" recarrega a página.
+ */
+function MapUnavailable() {
+  return (
+    <div className="grid h-full place-items-center px-6">
+      <EmptyState
+        icon={MapPinOff}
+        title="Mapa indisponível"
+        description="Não foi possível carregar o mapa. Verifique sua conexão e tente de novo."
+      >
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className={buttonClasses('primary', 'w-full')}
+        >
+          Tentar de novo
+        </button>
+      </EmptyState>
+    </div>
+  )
 }

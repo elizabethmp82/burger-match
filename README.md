@@ -45,6 +45,7 @@ O app é **100% front-end** (sem backend nem banco de dados) e foi pensado para 
 - **Favoritos** — salvos no aparelho (continuam depois de recarregar ou fechar o navegador); lista das hamburguerias curtidas (no desktop ≥ 1280 px, lista + detalhe lado a lado).
 - **Mapa** — mapa interativo (MapLibre) com as hamburguerias da região; no desktop, lista lateral sincronizada.
 - **Detalhes** — endereço, horário de funcionamento, status "aberto/fechado", distância, compartilhar e rota pelo Google Maps (apenas link, sem API).
+- **Instalável (PWA)** — dá para adicionar à tela inicial do celular ou instalar no computador; o app abre mesmo sem internet (os dados das hamburguerias precisam de conexão).
 - **Modo demonstração** — dados simulados, sem acessar a rede, para desenvolver e testar em qualquer lugar.
 - **Layout responsivo** — celular, tablet e desktop:
 
@@ -66,8 +67,8 @@ O desenvolvimento acontece em etapas, cada uma validada antes da próxima.
 | 3     | Geolocalização          | ✅ Concluída                                                               |
 | 4     | Dados reais e mapa      | ✅ Concluída — Geoapify + OpenStreetMap, MapLibre + OpenFreeMap, Nominatim |
 | 5     | Swipe (gestos)          | ✅ Concluída                                                               |
-| 6     | Favoritos persistentes  | 🧪 Implementada, aguardando aprovação                                      |
-| 7     | PWA                     | ⏳ Planejada                                                               |
+| 6     | Favoritos persistentes  | ✅ Concluída                                                               |
+| 7     | PWA                     | 🧪 Implementada, aguardando aprovação                                      |
 | 8     | Testes e publicação     | ⏳ Planejada                                                               |
 
 > A Etapa 4 começou com a Google Maps Platform, mas o projeto migrou para dados abertos para não depender de faturamento obrigatório.
@@ -118,18 +119,18 @@ Passo a passo completo (inclusive Nominatim, mapa e Overpass) em [docs/data-serv
 
 ## Scripts
 
-| Script                 | O que faz                                |
-| ---------------------- | ---------------------------------------- |
-| `npm run dev`          | Servidor de desenvolvimento com HMR      |
-| `npm run build`        | Verificação de tipos + build de produção |
-| `npm run preview`      | Serve o build de `dist/` localmente      |
-| `npm test`             | Roda os testes uma vez (Vitest)          |
-| `npm run test:watch`   | Testes em modo observação                |
-| `npm run typecheck`    | Verificação de tipos (TypeScript)        |
-| `npm run lint`         | ESLint                                   |
-| `npm run lint:fix`     | ESLint com correções automáticas         |
-| `npm run format`       | Formata o código com Prettier            |
-| `npm run format:check` | Verifica a formatação sem alterar        |
+| Script                 | O que faz                                                                     |
+| ---------------------- | ----------------------------------------------------------------------------- |
+| `npm run dev`          | Servidor de desenvolvimento com HMR                                           |
+| `npm run build`        | Verificação de tipos + build de produção                                      |
+| `npm run preview`      | Serve o build de `dist/` localmente (é onde a PWA e o modo offline funcionam) |
+| `npm test`             | Roda os testes uma vez (Vitest)                                               |
+| `npm run test:watch`   | Testes em modo observação                                                     |
+| `npm run typecheck`    | Verificação de tipos (TypeScript)                                             |
+| `npm run lint`         | ESLint                                                                        |
+| `npm run lint:fix`     | ESLint com correções automáticas                                              |
+| `npm run format`       | Formata o código com Prettier                                                 |
+| `npm run format:check` | Verifica a formatação sem alterar                                             |
 
 Antes de abrir um commit, o ideal é que passem: `npm run typecheck && npm run lint && npm test && npm run format:check`.
 
@@ -187,4 +188,4 @@ O app exibe a atribuição exigida por cada serviço. Para respeitar as polític
 
 ## Stack
 
-React 19 · TypeScript 6 · Vite 8 · Tailwind CSS 4 · React Router 8 · TanStack Query 5 · MapLibre GL JS · Geoapify Places API · Lucide React · Vitest · ESLint · Prettier
+React 19 · TypeScript 6 · Vite 8 · Tailwind CSS 4 · React Router 8 · TanStack Query 5 · MapLibre GL JS · Geoapify Places API · vite-plugin-pwa (Workbox) · Fontsource · Lucide React · Vitest · ESLint · Prettier

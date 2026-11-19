@@ -1,4 +1,5 @@
-import brandIcon from '@/assets/logos/burgermatch-icone.png'
+// 640 px em WebP (27 KB): nítido até ~300 px na tela; o PNG original tem 1024 px / 126 KB.
+import brandIcon from '@/assets/logos/burgermatch-icone.webp'
 import { cn } from '@/utils/cn'
 
 /** Ícone da marca (decorativo: o nome do app sempre aparece ao lado, em texto). */

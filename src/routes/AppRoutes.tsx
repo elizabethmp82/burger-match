@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate } from 'react-router'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { RequireLocation } from '@/components/layout/RequireLocation'
+import { RouteError } from '@/components/layout/RouteError'
 import { DiscoverPage } from '@/features/discovery/pages/DiscoverPage'
 import { FavoritesPage } from '@/features/favorites/pages/FavoritesPage'
 import { MapPage } from '@/features/map/pages/MapPage'
@@ -14,9 +15,10 @@ import { paths } from './paths'
  * o AppLayout esconde a navegação inferior nesta rota (docs/scope.md §3).
  */
 export const router = createBrowserRouter([
-  { path: paths.welcome, element: <WelcomePage /> },
+  { path: paths.welcome, element: <WelcomePage />, errorElement: <RouteError /> },
   {
     element: <AppLayout />,
+    errorElement: <RouteError />,
     children: [
       {
         path: paths.discover,
